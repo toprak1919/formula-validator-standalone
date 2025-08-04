@@ -99,7 +99,7 @@
 
         .main-content {
             display: grid;
-            grid-template-columns: 1fr 360px;
+            grid-template-columns: 320px 1fr;
             gap: 0;
             min-height: 600px;
         }
@@ -110,12 +110,6 @@
             border-right: 1px solid var(--border-primary);
         }
 
-        .sidebar {
-            background: var(--bg-secondary);
-            padding: 24px;
-            overflow-y: auto;
-            max-height: 600px;
-        }
 
         .editor-container {
             margin-bottom: 24px;
@@ -339,20 +333,6 @@
             font-family: 'JetBrains Mono', monospace;
         }
 
-        .sidebar-section {
-            margin-bottom: 24px;
-        }
-
-        .sidebar-title {
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-primary);
-            margin-bottom: 12px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid var(--border-primary);
-        }
 
         .variable-list {
             display: flex;
@@ -460,6 +440,366 @@
             background: rgba(99, 102, 241, 0.1);
         }
 
+        /* Source change notification */
+        .source-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--accent-warning);
+            border-radius: 8px;
+            padding: 16px 20px;
+            max-width: 400px;
+            box-shadow: var(--shadow-lg);
+            opacity: 0;
+            transform: translateX(20px);
+            transition: all 0.3s ease;
+            z-index: 1001;
+        }
+
+        .source-notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .source-notification-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--accent-warning);
+        }
+
+        .source-notification-body {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .source-notification-actions {
+            margin-top: 12px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .source-notification-actions .btn {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        /* Deprecated variable indicator */
+        .variable-item.deprecated {
+            opacity: 0.5;
+            text-decoration: line-through;
+        }
+
+        .variable-item.deprecated::after {
+            content: 'DELETED';
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            font-size: 9px;
+            background: var(--accent-error);
+            color: white;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        /* Source sync status */
+        .source-sync-status {
+            margin-left: auto;
+            font-size: 11px;
+            opacity: 0.6;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .source-sync-status.synced {
+            color: var(--accent-success);
+        }
+
+        .source-sync-status.pending {
+            color: var(--accent-warning);
+        }
+
+        .source-sync-status.error {
+            color: var(--accent-error);
+        }
+
+        /* Left sidebar - Source Management */
+        .source-management {
+            background: var(--bg-secondary);
+            padding: 24px;
+            overflow-y: auto;
+            max-height: 600px;
+            border-right: 1px solid var(--border-primary);
+        }
+
+        .source-section {
+            margin-bottom: 32px;
+        }
+
+        .source-section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .source-section-title {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-primary);
+        }
+
+        .add-source-btn {
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .add-source-btn:hover {
+            background: var(--accent-secondary);
+            transform: translateY(-1px);
+        }
+
+        .source-item {
+            background: var(--bg-glass);
+            border: 1px solid var(--border-primary);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .source-item:hover {
+            border-color: var(--accent-primary);
+            background: var(--bg-glass-hover);
+        }
+
+        .source-item.editing {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+        }
+
+        .source-item-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+
+        .source-item-name {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .source-item-actions {
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .source-item:hover .source-item-actions {
+            opacity: 1;
+        }
+
+        .source-action-btn {
+            background: transparent;
+            border: none;
+            padding: 4px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            border-radius: 4px;
+        }
+
+        .source-action-btn:hover {
+            background: var(--bg-glass-hover);
+            color: var(--text-primary);
+        }
+
+        .source-action-btn.delete:hover {
+            color: var(--accent-error);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .source-item-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .source-item-input {
+            width: 100%;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-primary);
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .source-item-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+        }
+
+        .source-item-buttons {
+            display: flex;
+            gap: 6px;
+            justify-content: flex-end;
+            margin-top: 8px;
+        }
+
+        .source-item-buttons .btn {
+            padding: 4px 12px;
+            font-size: 11px;
+        }
+
+        /* Add source form */
+        .add-source-form {
+            background: var(--bg-glass);
+            border: 1px solid var(--accent-primary);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            animation: slideDown 0.2s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .add-source-form input {
+            width: 100%;
+            margin-bottom: 8px;
+        }
+
+        .add-source-form .form-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .add-source-form .form-row input {
+            margin-bottom: 0;
+        }
+
+        .add-source-form label {
+            display: block;
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        /* Functions grid in left panel */
+        .functions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .function-item {
+            background: var(--bg-glass);
+            border: 1px solid var(--border-primary);
+            border-radius: 6px;
+            padding: 8px 10px;
+            cursor: pointer;
+            text-align: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+        }
+
+        .function-item:hover {
+            background: var(--bg-glass-hover);
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+            transform: translateY(-1px);
+        }
+
+        /* Responsive design */
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 280px 1fr;
+            }
+        }
+
+        @media (max-width: 968px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .source-management {
+                border-right: none;
+                border-bottom: 1px solid var(--border-primary);
+                max-height: 400px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .header {
+                padding: 24px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .header p {
+                font-size: 14px;
+            }
+
+            .editor-section {
+                padding: 24px;
+            }
+
+            .source-management {
+                padding: 16px;
+            }
+
+            .container {
+                border-radius: 16px;
+            }
+        }
+
         /* Ace Editor Theme Overrides */
         .ace-github-dark .ace_gutter {
             background: var(--bg-secondary) !important;
@@ -492,17 +832,60 @@
         </div>
         
         <div class="main-content">
+            <div class="source-management">
+                <div class="source-section">
+                    <div class="source-section-header">
+                        <h3 class="source-section-title">Measured Values ($)</h3>
+                        <button class="add-source-btn" onclick="showAddMeasuredForm()">
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                                <path d="M6 2v4m0 0v4m0-4h4m-4 0H2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            </svg>
+                            Add
+                        </button>
+                    </div>
+                    <div id="addMeasuredForm" style="display: none;"></div>
+                    <div id="measuredValuesList"></div>
+                </div>
+
+                <div class="source-section">
+                    <div class="source-section-header">
+                        <h3 class="source-section-title">Constants (#)</h3>
+                        <button class="add-source-btn" onclick="showAddConstantForm()">
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                                <path d="M6 2v4m0 0v4m0-4h4m-4 0H2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            </svg>
+                            Add
+                        </button>
+                    </div>
+                    <div id="addConstantForm" style="display: none;"></div>
+                    <div id="constantsList"></div>
+                </div>
+
+                <div class="source-section">
+                    <div class="source-section-header">
+                        <h3 class="source-section-title">Available Functions</h3>
+                    </div>
+                    <div id="functionsList" class="functions-grid"></div>
+                </div>
+            </div>
+            
             <div class="editor-section">
                 <div class="editor-container">
                     <div class="editor-label">
                         Formula Editor
-                        <span id="spellcheckIndicator" style="margin-left: auto; font-size: 11px; opacity: 0.6;"></span>
+                        <span class="source-sync-status synced" id="sourceSyncStatus">
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                                <path d="M10.5 1.5a.75.75 0 01.75.75v3a.75.75 0 01-.75.75h-3a.75.75 0 010-1.5h1.44L6.22 7.22a.75.75 0 01-1.06 0L3.5 5.56 1.28 7.78a.75.75 0 01-1.06-1.06l2.75-2.75a.75.75 0 011.06 0L5.69 5.63l2.19-2.19V4.5a.75.75 0 01.75-.75h1.87z"/>
+                            </svg>
+                            Sources synced
+                        </span>
                     </div>
                     <div class="editor-wrapper" id="editorWrapper">
                         <div class="toolbar">
                             <button class="btn primary" onclick="evaluateFormula()">Evaluate</button>
                             <button class="btn" onclick="clearEditor()">Clear</button>
                             <button class="btn" onclick="insertSample()">Insert Sample</button>
+                            <button class="btn" onclick="simulateSourceChanges()" title="Test source changes">Simulate Change</button>
                         </div>
                         <div id="editor"></div>
                     </div>
@@ -524,29 +907,28 @@
                     <div class="result-value" id="resultValue">Enter a formula to see the result...</div>
                 </div>
             </div>
-
-            <div class="sidebar">
-                <div class="sidebar-section">
-                    <div class="sidebar-title">Measured Values ($)</div>
-                    <div class="variable-list" id="measuredValues"></div>
-                </div>
-
-                <div class="sidebar-section">
-                    <div class="sidebar-title">Constants (#)</div>
-                    <div class="variable-list" id="constants"></div>
-                </div>
-
-                <div class="sidebar-section">
-                    <div class="sidebar-title">Available Functions</div>
-                    <div class="variable-list" id="functionsList"></div>
-                </div>
-            </div>
         </div>
     </div>
 
     <div class="graphql-status" id="graphqlStatus">
         <div class="spinner"></div>
         <span>GraphQL query in progress...</span>
+    </div>
+
+    <div class="source-notification" id="sourceNotification">
+        <div class="source-notification-header">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zm0 16a3 3 0 01-3-3h6a3 3 0 01-3 3z"/>
+            </svg>
+            <span>Source Update Detected</span>
+        </div>
+        <div class="source-notification-body" id="sourceNotificationBody">
+            Variables have been added or removed from the data sources.
+        </div>
+        <div class="source-notification-actions">
+            <button class="btn" onclick="dismissSourceNotification()">Dismiss</button>
+            <button class="btn primary" onclick="revalidateFormula()">Revalidate</button>
+        </div>
     </div>
 
     <!-- Ace Editor CDN -->
@@ -588,6 +970,8 @@
         let editor;
         let spellcheckTimeout;
         let currentErrors = [];
+        let deletedSources = new Set();
+        let sourceChangeQueue = [];
 
         function initializeEditor() {
             editor = ace.edit("editor");
@@ -1200,13 +1584,366 @@
             });
         }
 
+        // Source change handling
+        function simulateSourceChanges() {
+            const changeTypes = ['add', 'delete', 'modify'];
+            const changeType = changeTypes[Math.floor(Math.random() * changeTypes.length)];
+            
+            let notification = '';
+            
+            switch (changeType) {
+                case 'add':
+                    // Add a new measured value
+                    const newKey = `$newMeasured_${Date.now()}`;
+                    measuredValues[newKey] = Math.random() * 100;
+                    notification = `New variable added: ${newKey}`;
+                    break;
+                    
+                case 'delete':
+                    // Delete a random measured value
+                    const keys = Object.keys(measuredValues);
+                    if (keys.length > 3) {
+                        const keyToDelete = keys[Math.floor(Math.random() * keys.length)];
+                        delete measuredValues[keyToDelete];
+                        deletedSources.add(keyToDelete);
+                        notification = `Variable deleted: ${keyToDelete}`;
+                    }
+                    break;
+                    
+                case 'modify':
+                    // Modify a random value
+                    const modKeys = Object.keys(measuredValues);
+                    if (modKeys.length > 0) {
+                        const keyToModify = modKeys[Math.floor(Math.random() * modKeys.length)];
+                        const oldValue = measuredValues[keyToModify];
+                        measuredValues[keyToModify] = Math.random() * 100;
+                        notification = `Variable ${keyToModify} changed from ${oldValue.toFixed(2)} to ${measuredValues[keyToModify].toFixed(2)}`;
+                    }
+                    break;
+            }
+            
+            if (notification) {
+                handleSourceChange(notification);
+            }
+        }
+
+        function handleSourceChange(message) {
+            // Add to change queue
+            sourceChangeQueue.push({
+                message: message,
+                timestamp: new Date()
+            });
+            
+            // Update sync status
+            const syncStatus = document.getElementById('sourceSyncStatus');
+            syncStatus.className = 'source-sync-status pending';
+            syncStatus.innerHTML = `
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                    <path d="M6 1v4.5L8.5 8M6 11A5 5 0 106 1a5 5 0 000 10z"/>
+                </svg>
+                Sources updating...
+            `;
+            
+            // Show notification
+            showSourceNotification(message);
+            
+            // Refresh source lists
+            renderSourceLists();
+            
+            // Trigger revalidation
+            setTimeout(() => {
+                performSpellcheck();
+                updateSyncStatus();
+            }, 1000);
+        }
+
+        function showSourceNotification(message) {
+            const notification = document.getElementById('sourceNotification');
+            const body = document.getElementById('sourceNotificationBody');
+            
+            body.innerHTML = `
+                <div>${message}</div>
+                ${sourceChangeQueue.length > 1 ? `<div style="margin-top: 4px; opacity: 0.7;">And ${sourceChangeQueue.length - 1} other changes</div>` : ''}
+            `;
+            
+            notification.classList.add('show');
+            
+            // Auto-hide after 10 seconds
+            setTimeout(() => {
+                if (notification.classList.contains('show') && sourceChangeQueue.length === 0) {
+                    dismissSourceNotification();
+                }
+            }, 10000);
+        }
+
+        function dismissSourceNotification() {
+            const notification = document.getElementById('sourceNotification');
+            notification.classList.remove('show');
+            sourceChangeQueue = [];
+        }
+
+        function revalidateFormula() {
+            dismissSourceNotification();
+            performSpellcheck();
+            evaluateFormula();
+        }
+
+        function updateSyncStatus() {
+            const syncStatus = document.getElementById('sourceSyncStatus');
+            syncStatus.className = 'source-sync-status synced';
+            syncStatus.innerHTML = `
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                    <path d="M4.5 7.5L2 5l1-1 1.5 1.5L8 2l1 1-4.5 4.5z"/>
+                </svg>
+                Sources synced
+            `;
+        }
+
+
+        // Source Management Functions
+        function showAddMeasuredForm() {
+            const formContainer = document.getElementById('addMeasuredForm');
+            formContainer.innerHTML = `
+                <div class="add-source-form">
+                    <label>Variable Name (without $)</label>
+                    <input type="text" id="newMeasuredName" class="source-item-input" placeholder="e.g., temperature" />
+                    <label>Initial Value</label>
+                    <input type="number" id="newMeasuredValue" class="source-item-input" placeholder="0.0" step="0.01" />
+                    <div class="source-item-buttons">
+                        <button class="btn" onclick="cancelAddMeasured()">Cancel</button>
+                        <button class="btn primary" onclick="addMeasuredValue()">Add</button>
+                    </div>
+                </div>
+            `;
+            formContainer.style.display = 'block';
+            document.getElementById('newMeasuredName').focus();
+        }
+
+        function showAddConstantForm() {
+            const formContainer = document.getElementById('addConstantForm');
+            formContainer.innerHTML = `
+                <div class="add-source-form">
+                    <label>Constant Name (without #)</label>
+                    <input type="text" id="newConstantName" class="source-item-input" placeholder="e.g., myConstant" />
+                    <label>Value</label>
+                    <input type="number" id="newConstantValue" class="source-item-input" placeholder="0.0" step="any" />
+                    <div class="source-item-buttons">
+                        <button class="btn" onclick="cancelAddConstant()">Cancel</button>
+                        <button class="btn primary" onclick="addConstantValue()">Add</button>
+                    </div>
+                </div>
+            `;
+            formContainer.style.display = 'block';
+            document.getElementById('newConstantName').focus();
+        }
+
+        function cancelAddMeasured() {
+            document.getElementById('addMeasuredForm').style.display = 'none';
+        }
+
+        function cancelAddConstant() {
+            document.getElementById('addConstantForm').style.display = 'none';
+        }
+
+        function addMeasuredValue() {
+            const name = document.getElementById('newMeasuredName').value.trim();
+            const value = parseFloat(document.getElementById('newMeasuredValue').value);
+            
+            if (!name || isNaN(value)) {
+                alert('Please enter a valid name and value');
+                return;
+            }
+            
+            const key = '$' + name.replace(/^\$/, ''); // Ensure $ prefix
+            if (measuredValues[key]) {
+                alert('Variable already exists');
+                return;
+            }
+            
+            measuredValues[key] = value;
+            handleSourceChange(`Added variable: ${key} = ${value}`);
+            cancelAddMeasured();
+            renderSourceLists();
+        }
+
+        function addConstantValue() {
+            const name = document.getElementById('newConstantName').value.trim();
+            const value = parseFloat(document.getElementById('newConstantValue').value);
+            
+            if (!name || isNaN(value)) {
+                alert('Please enter a valid name and value');
+                return;
+            }
+            
+            const key = '#' + name.replace(/^#/, ''); // Ensure # prefix
+            if (constants[key]) {
+                alert('Constant already exists');
+                return;
+            }
+            
+            constants[key] = value;
+            handleSourceChange(`Added constant: ${key} = ${value}`);
+            cancelAddConstant();
+            renderSourceLists();
+        }
+
+        function editSource(key, type) {
+            const sourceItem = event.target.closest('.source-item');
+            const currentValue = type === 'measured' ? measuredValues[key] : constants[key];
+            
+            sourceItem.classList.add('editing');
+            sourceItem.innerHTML = `
+                <input type="text" class="source-item-input" value="${key}" disabled />
+                <input type="number" class="source-item-input" id="edit-${key}" value="${currentValue}" step="any" />
+                <div class="source-item-buttons">
+                    <button class="btn" onclick="cancelEdit('${key}', '${type}')">Cancel</button>
+                    <button class="btn primary" onclick="saveEdit('${key}', '${type}')">Save</button>
+                </div>
+            `;
+            document.getElementById(`edit-${key}`).focus();
+        }
+
+        function cancelEdit(key, type) {
+            renderSourceLists();
+        }
+
+        function saveEdit(key, type) {
+            const newValue = parseFloat(document.getElementById(`edit-${key}`).value);
+            
+            if (isNaN(newValue)) {
+                alert('Please enter a valid number');
+                return;
+            }
+            
+            const oldValue = type === 'measured' ? measuredValues[key] : constants[key];
+            
+            if (type === 'measured') {
+                measuredValues[key] = newValue;
+            } else {
+                constants[key] = newValue;
+            }
+            
+            handleSourceChange(`Updated ${key} from ${oldValue} to ${newValue}`);
+            renderSourceLists();
+        }
+
+        function deleteSource(key, type) {
+            if (!confirm(`Are you sure you want to delete ${key}?`)) {
+                return;
+            }
+            
+            if (type === 'measured') {
+                delete measuredValues[key];
+                deletedSources.add(key);
+            } else {
+                delete constants[key];
+                deletedSources.add(key);
+            }
+            
+            handleSourceChange(`Deleted ${type}: ${key}`);
+            renderSourceLists();
+        }
+
+        function renderSourceLists() {
+            // Render measured values
+            const measuredList = document.getElementById('measuredValuesList');
+            measuredList.innerHTML = '';
+            
+            Object.entries(measuredValues).forEach(([key, value]) => {
+                const item = document.createElement('div');
+                item.className = 'source-item';
+                item.innerHTML = `
+                    <div class="source-item-header">
+                        <div class="source-item-name" onclick="insertVariable('${key}')">${key}</div>
+                        <div class="source-item-actions">
+                            <button class="source-action-btn" onclick="editSource('${key}', 'measured')" title="Edit">
+                                <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+                                    <path d="M11.854.146a.5.5 0 00-.707 0L2.5 8.793V12h3.207l8.647-8.646a.5.5 0 000-.708l-2.5-2.5zM3.5 11V9.207l7-7L12.293 4l-7 7H3.5z"/>
+                                </svg>
+                            </button>
+                            <button class="source-action-btn delete" onclick="deleteSource('${key}', 'measured')" title="Delete">
+                                <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+                                    <path d="M5.5 1a1 1 0 00-1 1v1h5V2a1 1 0 00-1-1h-3zm6 3h-9v8a1 1 0 001 1h7a1 1 0 001-1V4zm-7 2v5h1V6h-1zm3 0v5h1V6h-1z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="source-item-value">Value: ${value}</div>
+                `;
+                measuredList.appendChild(item);
+            });
+            
+            // Render constants
+            const constantsList = document.getElementById('constantsList');
+            constantsList.innerHTML = '';
+            
+            Object.entries(constants).forEach(([key, value]) => {
+                const item = document.createElement('div');
+                item.className = 'source-item';
+                item.innerHTML = `
+                    <div class="source-item-header">
+                        <div class="source-item-name" onclick="insertVariable('${key}')">${key}</div>
+                        <div class="source-item-actions">
+                            <button class="source-action-btn" onclick="editSource('${key}', 'constant')" title="Edit">
+                                <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+                                    <path d="M11.854.146a.5.5 0 00-.707 0L2.5 8.793V12h3.207l8.647-8.646a.5.5 0 000-.708l-2.5-2.5zM3.5 11V9.207l7-7L12.293 4l-7 7H3.5z"/>
+                                </svg>
+                            </button>
+                            <button class="source-action-btn delete" onclick="deleteSource('${key}', 'constant')" title="Delete">
+                                <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+                                    <path d="M5.5 1a1 1 0 00-1 1v1h5V2a1 1 0 00-1-1h-3zm6 3h-9v8a1 1 0 001 1h7a1 1 0 001-1V4zm-7 2v5h1V6h-1zm3 0v5h1V6h-1z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="source-item-value">Value: ${value}</div>
+                `;
+                constantsList.appendChild(item);
+            });
+            
+            // Render functions
+            const functionsContainer = document.getElementById('functionsList');
+            functionsContainer.innerHTML = '';
+            functions.forEach(func => {
+                const item = document.createElement('div');
+                item.className = 'function-item';
+                item.textContent = func + '()';
+                item.title = `Insert ${func} function`;
+                item.addEventListener('click', () => {
+                    if (editor) {
+                        const cursor = editor.getCursorPosition();
+                        editor.session.insert(cursor, func + '()');
+                        editor.moveCursorTo(cursor.row, cursor.column + func.length + 1);
+                        editor.focus();
+                    }
+                });
+                functionsContainer.appendChild(item);
+            });
+            
+        }
+
+        function insertVariable(variable) {
+            if (editor) {
+                const cursor = editor.getCursorPosition();
+                editor.session.insert(cursor, variable);
+                editor.focus();
+            }
+        }
+
         // Initialize the application
         document.addEventListener('DOMContentLoaded', () => {
             initializeEditor();
-            renderSidebar();
+            renderSourceLists();
             
             // Initial spellcheck
             setTimeout(performSpellcheck, 100);
+            
+            // Simulate source changes every 15-30 seconds
+            setInterval(() => {
+                if (Math.random() > 0.7) {
+                    simulateSourceChanges();
+                }
+            }, 15000);
         });
     </script>
 </body>
