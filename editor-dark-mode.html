@@ -330,7 +330,6 @@
             position: relative;
             background: var(--bg-glass);
             backdrop-filter: blur(10px);
-            box-shadow: var(--shadow-md);
         }
 
         .editor-wrapper:hover {
@@ -833,8 +832,8 @@
         <div class="header">
             <div class="header-content">
                 <div>
-                    <h1>Enhanced Formula Editor</h1>
-                    <p>Advanced formula editor with modern dark mode, smooth animations, and glass morphism effects</p>
+                    <h1>Formula Editor Pro</h1>
+                    <p>Professional formula editor with dark mode support</p>
                 </div>
                 <div class="theme-toggle" onclick="toggleTheme()"></div>
             </div>
@@ -849,8 +848,8 @@
                     </div>
                     <div class="editor-wrapper" id="editorWrapper">
                         <div class="toolbar">
-                            <button class="btn primary" onclick="evaluateFormula()">Evaluate (Ctrl+Enter)</button>
-                            <button class="btn" onclick="clearEditor()">Clear (Ctrl+L)</button>
+                            <button class="btn primary" onclick="evaluateFormula()">Evaluate</button>
+                            <button class="btn" onclick="clearEditor()">Clear</button>
                             <button class="btn" onclick="insertSample()">Insert Sample</button>
                             <button class="btn" onclick="validateSyntax()">Validate</button>
                         </div>
@@ -887,20 +886,28 @@
                     <div class="sidebar-title">Keyboard Shortcuts</div>
                     <div class="shortcuts">
                         <div class="shortcut-item">
-                            <span class="shortcut-key">Ctrl+Enter</span>
+                            <span class="shortcut-key">⌘/Ctrl + Enter</span>
                             <span>Evaluate formula</span>
                         </div>
                         <div class="shortcut-item">
-                            <span class="shortcut-key">Ctrl+Space</span>
+                            <span class="shortcut-key">⌘/Ctrl + Space</span>
                             <span>Trigger autocomplete</span>
                         </div>
                         <div class="shortcut-item">
-                            <span class="shortcut-key">Ctrl+L</span>
+                            <span class="shortcut-key">⌘/Ctrl + K</span>
                             <span>Clear editor</span>
                         </div>
                         <div class="shortcut-item">
-                            <span class="shortcut-key">F5</span>
-                            <span>Validate syntax</span>
+                            <span class="shortcut-key">⌘/Ctrl + S</span>
+                            <span>Validate & save</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <span class="shortcut-key">Tab</span>
+                            <span>Accept suggestion</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <span class="shortcut-key">Esc</span>
+                            <span>Close autocomplete</span>
                         </div>
                     </div>
                 </div>
@@ -1134,7 +1141,7 @@
                 }
             }, 500));
 
-            // Keyboard shortcuts
+            // Keyboard shortcuts - Standard conventions
             editor.commands.addCommand({
                 name: 'evaluate',
                 bindKey: {win: 'Ctrl-Enter', mac: 'Command-Enter'},
@@ -1143,14 +1150,18 @@
 
             editor.commands.addCommand({
                 name: 'clear',
-                bindKey: {win: 'Ctrl-L', mac: 'Command-L'},
+                bindKey: {win: 'Ctrl-K', mac: 'Command-K'},
                 exec: clearEditor
             });
 
             editor.commands.addCommand({
                 name: 'validate',
-                bindKey: 'F5',
-                exec: validateSyntax
+                bindKey: {win: 'Ctrl-S', mac: 'Command-S'},
+                exec: function() {
+                    validateSyntax();
+                    // Prevent default browser save
+                    return false;
+                }
             });
 
             // Focus management
