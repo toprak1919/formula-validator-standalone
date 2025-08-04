@@ -3,86 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formula Editor - Enhanced Dark Mode</title>
+    <title>Formula Editor with GraphQL Spellcheck</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* Dark Theme Colors */
-            --bg-primary: #0a0a0a;
-            --bg-secondary: #1a1a1a;
-            --bg-tertiary: #2a2a2a;
-            --bg-card: rgba(26, 26, 26, 0.8);
-            --bg-glass: rgba(255, 255, 255, 0.05);
-            --bg-glass-hover: rgba(255, 255, 255, 0.1);
+            /* Professional Dark Theme */
+            --bg-primary: #0f0f0f;
+            --bg-secondary: #161618;
+            --bg-tertiary: #1e1e21;
+            --bg-card: rgba(22, 22, 24, 0.95);
+            --bg-glass: rgba(255, 255, 255, 0.02);
+            --bg-glass-hover: rgba(255, 255, 255, 0.05);
             
-            --text-primary: #ffffff;
-            --text-secondary: #a3a3a3;
-            --text-muted: #737373;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
             
-            --border-primary: rgba(255, 255, 255, 0.1);
-            --border-secondary: rgba(255, 255, 255, 0.05);
-            --border-focus: rgba(34, 197, 94, 0.5);
+            --border-primary: rgba(255, 255, 255, 0.08);
+            --border-secondary: rgba(255, 255, 255, 0.04);
+            --border-focus: rgba(99, 102, 241, 0.4);
             
-            --accent-primary: #22c55e;
+            --accent-primary: #6366f1;
             --accent-secondary: #3b82f6;
             --accent-tertiary: #8b5cf6;
             --accent-warning: #f59e0b;
             --accent-error: #ef4444;
-            
-            --neon-green: #00ff88;
-            --neon-blue: #0088ff;
-            --neon-purple: #8800ff;
-            --neon-cyan: #00ffff;
+            --accent-success: #10b981;
             
             --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
             --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
             --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
-            --shadow-xl: 0 16px 64px rgba(0, 0, 0, 0.6);
-
-            /* Light Theme Colors (for toggle) */
-            --light-bg-primary: #ffffff;
-            --light-bg-secondary: #f8fafc;
-            --light-bg-tertiary: #e2e8f0;
-            --light-bg-card: rgba(255, 255, 255, 0.9);
-            --light-bg-glass: rgba(0, 0, 0, 0.02);
-            --light-bg-glass-hover: rgba(0, 0, 0, 0.05);
-            
-            --light-text-primary: #1e293b;
-            --light-text-secondary: #475569;
-            --light-text-muted: #64748b;
-            
-            --light-border-primary: rgba(0, 0, 0, 0.1);
-            --light-border-secondary: rgba(0, 0, 0, 0.05);
-            --light-border-focus: rgba(34, 197, 94, 0.3);
-            
-            --light-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
-            --light-shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
-            --light-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
-            --light-shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.2);
-        }
-
-        [data-theme="light"] {
-            --bg-primary: var(--light-bg-primary);
-            --bg-secondary: var(--light-bg-secondary);
-            --bg-tertiary: var(--light-bg-tertiary);
-            --bg-card: var(--light-bg-card);
-            --bg-glass: var(--light-bg-glass);
-            --bg-glass-hover: var(--light-bg-glass-hover);
-            
-            --text-primary: var(--light-text-primary);
-            --text-secondary: var(--light-text-secondary);
-            --text-muted: var(--light-text-muted);
-            
-            --border-primary: var(--light-border-primary);
-            --border-secondary: var(--light-border-secondary);
-            --border-focus: var(--light-border-focus);
-            
-            --shadow-sm: var(--light-shadow-sm);
-            --shadow-md: var(--light-shadow-md);
-            --shadow-lg: var(--light-shadow-lg);
-            --shadow-xl: var(--light-shadow-xl);
         }
 
         * {
@@ -93,217 +45,32 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-tertiary) 100%);
+            background: var(--bg-primary);
+            background-image: radial-gradient(ellipse at top, var(--bg-secondary) 0%, transparent 50%),
+                              radial-gradient(ellipse at bottom, var(--bg-tertiary) 0%, transparent 50%);
             background-attachment: fixed;
             min-height: 100vh;
             padding: 20px;
             color: var(--text-primary);
-            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
             overflow-x: hidden;
-        }
-
-        /* Animated background particles */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at 20% 80%, rgba(34, 197, 94, 0.03) 0%, transparent 50%),
-                        radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.03) 0%, transparent 50%),
-                        radial-gradient(circle at 40% 40%, rgba(139, 92, 246, 0.02) 0%, transparent 50%);
-            animation: float 20s ease-in-out infinite;
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            33% { transform: translateY(-20px) rotate(1deg); }
-            66% { transform: translateY(10px) rotate(-1deg); }
         }
 
         .container {
             max-width: 1400px;
             margin: 0 auto;
             background: var(--bg-card);
-            border-radius: 24px;
-            box-shadow: var(--shadow-xl);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
             overflow: hidden;
             backdrop-filter: blur(20px);
             border: 1px solid var(--border-primary);
-            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-            animation: slideInUp 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+            animation: fadeIn 0.6s ease;
         }
 
-        @keyframes slideInUp {
+        @keyframes fadeIn {
             from {
                 opacity: 0;
-                transform: translateY(60px) scale(0.95);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
-        .header {
-            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
-            color: white;
-            padding: 32px 40px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
-            animation: shimmer 3s ease-in-out infinite;
-        }
-
-        @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
-        .header-content {
-            position: relative;
-            z-index: 1;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .header h1 {
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-            animation: fadeInLeft 0.8s cubic-bezier(0.23, 1, 0.32, 1) 0.2s both;
-        }
-
-        .header p {
-            opacity: 0.9;
-            font-size: 16px;
-            font-weight: 400;
-            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-            animation: fadeInLeft 0.8s cubic-bezier(0.23, 1, 0.32, 1) 0.4s both;
-        }
-
-        @keyframes fadeInLeft {
-            from {
-                opacity: 0;
-                transform: translateX(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        .theme-toggle {
-            position: relative;
-            width: 60px;
-            height: 30px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            animation: fadeInRight 0.8s cubic-bezier(0.23, 1, 0.32, 1) 0.6s both;
-        }
-
-        .theme-toggle:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: scale(1.05);
-        }
-
-        .theme-toggle::before {
-            content: '🌙';
-            position: absolute;
-            top: 50%;
-            left: 4px;
-            width: 22px;
-            height: 22px;
-            background: white;
-            border-radius: 50%;
-            transform: translateY(-50%);
-            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-        }
-
-        [data-theme="light"] .theme-toggle::before {
-            content: '☀️';
-            transform: translateY(-50%) translateX(28px);
-        }
-
-        @keyframes fadeInRight {
-            from {
-                opacity: 0;
-                transform: translateX(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        .main-content {
-            display: grid;
-            grid-template-columns: 1fr 360px;
-            gap: 0;
-            min-height: 700px;
-        }
-
-        .editor-section {
-            padding: 40px;
-            background: var(--bg-glass);
-            border-right: 1px solid var(--border-primary);
-            position: relative;
-        }
-
-        .sidebar {
-            background: var(--bg-secondary);
-            padding: 30px 25px;
-            overflow-y: auto;
-            max-height: 700px;
-            backdrop-filter: blur(10px);
-            scrollbar-width: thin;
-            scrollbar-color: var(--accent-primary) transparent;
-        }
-
-        .sidebar::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .sidebar::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .sidebar::-webkit-scrollbar-thumb {
-            background: var(--accent-primary);
-            border-radius: 3px;
-        }
-
-        .editor-container {
-            margin-bottom: 30px;
-            animation: fadeInUp 0.8s cubic-bezier(0.23, 1, 0.32, 1) 0.8s both;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
+                transform: translateY(20px);
             }
             to {
                 opacity: 1;
@@ -311,22 +78,66 @@
             }
         }
 
-        .editor-label {
+        .header {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            padding: 24px 32px;
+            border-bottom: 1px solid var(--border-primary);
+        }
+
+        .header h1 {
+            font-size: 24px;
             font-weight: 600;
+            margin-bottom: 4px;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            gap: 0;
+            min-height: 600px;
+        }
+
+        .editor-section {
+            padding: 32px;
+            background: var(--bg-glass);
+            border-right: 1px solid var(--border-primary);
+        }
+
+        .sidebar {
+            background: var(--bg-secondary);
+            padding: 24px;
+            overflow-y: auto;
+            max-height: 600px;
+        }
+
+        .editor-container {
+            margin-bottom: 24px;
+        }
+
+        .editor-label {
+            font-weight: 500;
             color: var(--text-primary);
             margin-bottom: 12px;
             display: flex;
             align-items: center;
             gap: 12px;
-            font-size: 18px;
-            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .editor-wrapper {
             border: 1px solid var(--border-primary);
-            border-radius: 16px;
+            border-radius: 12px;
             overflow: hidden;
-            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            transition: all 0.2s ease;
             position: relative;
             background: var(--bg-glass);
             backdrop-filter: blur(10px);
@@ -334,463 +145,325 @@
 
         .editor-wrapper:hover {
             border-color: var(--border-focus);
-            box-shadow: 0 0 0 1px var(--border-focus), var(--shadow-lg);
-            transform: translateY(-2px);
         }
 
         .editor-wrapper:focus-within {
             border-color: var(--accent-primary);
-            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2), var(--shadow-lg);
-            transform: translateY(-2px);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
         }
 
         .editor-wrapper.error {
             border-color: var(--accent-error);
-            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2), var(--shadow-lg);
-            animation: shake 0.5s ease-in-out;
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0) translateY(-2px); }
-            25% { transform: translateX(-4px) translateY(-2px); }
-            75% { transform: translateX(4px) translateY(-2px); }
+            box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15);
         }
 
         #editor {
             width: 100%;
-            height: 240px;
-            font-size: 16px;
+            height: 200px;
+            font-size: 15px;
             font-family: 'JetBrains Mono', monospace;
             background: transparent !important;
         }
 
         .toolbar {
             background: var(--bg-glass-hover);
-            padding: 16px 20px;
+            padding: 12px 16px;
             border-bottom: 1px solid var(--border-secondary);
             display: flex;
-            gap: 12px;
+            gap: 8px;
             align-items: center;
-            flex-wrap: wrap;
         }
 
         .btn {
-            padding: 10px 18px;
+            padding: 8px 16px;
             border: 1px solid var(--border-primary);
             background: var(--bg-glass);
-            border-radius: 12px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 500;
             color: var(--text-primary);
-            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-            position: relative;
-            overflow: hidden;
-            backdrop-filter: blur(10px);
+            transition: all 0.2s ease;
             font-family: 'Inter', sans-serif;
-        }
-
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            transition: left 0.5s ease;
-        }
-
-        .btn:hover::before {
-            left: 100%;
         }
 
         .btn:hover {
             background: var(--bg-glass-hover);
             border-color: var(--accent-primary);
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
+            transform: translateY(-1px);
         }
 
         .btn:active {
             transform: translateY(0);
-            box-shadow: var(--shadow-sm);
         }
 
         .btn.primary {
-            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            background: var(--accent-primary);
             color: white;
             border-color: var(--accent-primary);
-            box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
         }
 
         .btn.primary:hover {
-            background: linear-gradient(135deg, #16a34a, #2563eb);
-            box-shadow: 0 0 30px rgba(34, 197, 94, 0.5);
-            transform: translateY(-3px);
+            background: var(--accent-secondary);
+            border-color: var(--accent-secondary);
         }
 
-        .status-section {
-            margin-top: 30px;
-            animation: fadeInUp 0.8s cubic-bezier(0.23, 1, 0.32, 1) 1s both;
+        /* Error indicators in editor */
+        .ace_error-marker {
+            position: absolute;
+            border-bottom: 2px wavy var(--accent-error);
+        }
+
+        .ace_warning-marker {
+            position: absolute;
+            border-bottom: 2px wavy var(--accent-warning);
+        }
+
+        /* Inline error tooltips */
+        .error-tooltip {
+            position: absolute;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--accent-error);
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 12px;
+            color: var(--text-primary);
+            box-shadow: var(--shadow-md);
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .error-tooltip.show {
+            opacity: 1;
+        }
+
+        .error-tooltip::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: 16px;
+            width: 8px;
+            height: 8px;
+            background: var(--bg-tertiary);
+            border-left: 1px solid var(--accent-error);
+            border-top: 1px solid var(--accent-error);
+            transform: rotate(45deg);
+        }
+
+        .spellcheck-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-primary);
+            border-radius: 8px;
+            margin-top: 16px;
+            font-size: 13px;
+            transition: all 0.2s ease;
+        }
+
+        .spellcheck-status.checking {
+            border-color: var(--accent-primary);
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .spellcheck-status.valid {
+            border-color: var(--accent-success);
+            background: rgba(16, 185, 129, 0.05);
+            color: var(--accent-success);
+        }
+
+        .spellcheck-status.invalid {
+            border-color: var(--accent-error);
+            background: rgba(239, 68, 68, 0.05);
+            color: var(--accent-error);
+        }
+
+        .status-icon {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .spinner {
+            width: 14px;
+            height: 14px;
+            border: 2px solid var(--accent-primary);
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         .result-container {
             background: var(--bg-glass);
             border: 1px solid var(--border-primary);
-            border-radius: 16px;
-            padding: 24px;
-            min-height: 80px;
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 60px;
             backdrop-filter: blur(10px);
-            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .result-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary), var(--accent-tertiary));
-            transform: translateX(-100%);
-            transition: transform 0.3s ease;
-        }
-
-        .result-container.success::before {
-            transform: translateX(0);
+            transition: all 0.2s ease;
+            margin-top: 24px;
         }
 
         .result-container.success {
-            background: rgba(34, 197, 94, 0.1);
+            background: rgba(99, 102, 241, 0.05);
             border-color: var(--accent-primary);
-            color: var(--neon-green);
-            box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
-            animation: successPulse 0.6s ease-out;
-        }
-
-        @keyframes successPulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-            100% { transform: scale(1); }
         }
 
         .result-container.error {
-            background: rgba(239, 68, 68, 0.1);
+            background: rgba(239, 68, 68, 0.05);
             border-color: var(--accent-error);
-            color: #ff6b6b;
-            box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
-            animation: errorShake 0.6s ease-out;
-        }
-
-        @keyframes errorShake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-4px); }
-            75% { transform: translateX(4px); }
         }
 
         .result-label {
-            font-size: 13px;
-            font-weight: 600;
+            font-size: 11px;
+            font-weight: 500;
             text-transform: uppercase;
             margin-bottom: 8px;
-            opacity: 0.8;
-            letter-spacing: 1px;
-            font-family: 'Inter', sans-serif;
+            opacity: 0.6;
+            letter-spacing: 0.5px;
         }
 
         .result-value {
-            font-size: 18px;
-            font-weight: 600;
-            word-break: break-all;
+            font-size: 16px;
+            font-weight: 500;
             font-family: 'JetBrains Mono', monospace;
-            line-height: 1.4;
         }
 
         .sidebar-section {
-            margin-bottom: 32px;
-            animation: fadeInRight 0.8s cubic-bezier(0.23, 1, 0.32, 1) calc(var(--i) * 0.1s + 1.2s) both;
+            margin-bottom: 24px;
         }
 
         .sidebar-title {
-            font-size: 16px;
-            font-weight: 700;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
             color: var(--text-primary);
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             padding-bottom: 8px;
-            border-bottom: 2px solid var(--accent-primary);
-            position: relative;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .sidebar-title::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: var(--neon-green);
-            transition: width 0.3s ease;
-        }
-
-        .sidebar-section:hover .sidebar-title::after {
-            width: 100%;
+            border-bottom: 1px solid var(--border-primary);
         }
 
         .variable-list {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
         }
 
         .variable-item {
             background: var(--bg-glass);
-            padding: 12px 16px;
+            padding: 10px 12px;
             border: 1px solid var(--border-primary);
-            border-radius: 12px;
+            border-radius: 8px;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+            transition: all 0.2s ease;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
-            position: relative;
-            overflow: hidden;
-            backdrop-filter: blur(10px);
-        }
-
-        .variable-item::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
-            transition: left 0.4s ease;
-        }
-
-        .variable-item:hover::before {
-            left: 100%;
+            font-size: 12px;
         }
 
         .variable-item:hover {
             background: var(--bg-glass-hover);
             border-color: var(--accent-primary);
-            transform: translateY(-2px) translateX(4px);
-            box-shadow: var(--shadow-md);
-        }
-
-        .variable-item:active {
-            transform: translateY(0) translateX(2px);
-            box-shadow: var(--shadow-sm);
+            transform: translateX(2px);
         }
 
         .variable-item.measured {
-            border-left: 3px solid var(--neon-blue);
+            border-left: 2px solid var(--accent-secondary);
         }
 
         .variable-item.constant {
-            border-left: 3px solid var(--neon-purple);
+            border-left: 2px solid var(--accent-tertiary);
         }
 
         .variable-name {
-            font-weight: 600;
+            font-weight: 500;
             color: var(--text-primary);
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
 
         .variable-value {
             color: var(--text-secondary);
-            font-size: 12px;
+            font-size: 11px;
             opacity: 0.8;
         }
 
-        .functions-list {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+        .error-list {
+            margin-top: 16px;
+            display: flex;
+            flex-direction: column;
             gap: 8px;
         }
 
-        .function-item {
-            background: var(--bg-glass);
-            padding: 10px 12px;
-            border: 1px solid var(--border-primary);
-            border-radius: 10px;
-            cursor: pointer;
-            text-align: center;
+        .error-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(239, 68, 68, 0.05);
+            border: 1px solid var(--accent-error);
+            border-radius: 6px;
+            font-size: 12px;
+            color: var(--accent-error);
+        }
+
+        .error-item .error-icon {
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .error-details {
+            flex: 1;
+        }
+
+        .error-position {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--accent-tertiary);
-            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-            position: relative;
-            overflow: hidden;
-            backdrop-filter: blur(10px);
+            font-size: 11px;
+            opacity: 0.8;
         }
 
-        .function-item::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.1), transparent);
-            transition: left 0.4s ease;
-        }
-
-        .function-item:hover::before {
-            left: 100%;
-        }
-
-        .function-item:hover {
-            background: rgba(139, 92, 246, 0.1);
-            border-color: var(--accent-tertiary);
-            color: var(--neon-purple);
-            transform: translateY(-2px);
-            box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
-        }
-
-        .shortcuts {
-            background: var(--bg-glass);
-            padding: 16px;
-            border-radius: 12px;
-            font-size: 12px;
+        /* GraphQL status indicator */
+        .graphql-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--bg-tertiary);
             border: 1px solid var(--border-primary);
-            backdrop-filter: blur(10px);
-        }
-
-        .shortcut-item {
-            margin-bottom: 8px;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 12px;
             display: flex;
             align-items: center;
             gap: 8px;
-            color: var(--text-secondary);
+            box-shadow: var(--shadow-md);
+            transition: all 0.2s ease;
+            opacity: 0;
+            transform: translateY(10px);
         }
 
-        .shortcut-key {
-            background: linear-gradient(135deg, var(--accent-secondary), var(--accent-tertiary));
-            color: white;
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 11px;
-            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
-            min-width: fit-content;
+        .graphql-status.show {
+            opacity: 1;
+            transform: translateY(0);
         }
 
-        .loading-indicator {
-            display: none;
-            color: var(--accent-primary);
-            font-style: italic;
-            animation: pulse 1.5s ease-in-out infinite;
+        .graphql-status.active {
+            border-color: var(--accent-primary);
+            background: rgba(99, 102, 241, 0.1);
         }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 0.6; }
-            50% { opacity: 1; }
-        }
-
-        .validation-status {
-            padding: 12px 16px;
-            border-radius: 12px;
-            margin-top: 16px;
-            font-size: 13px;
-            font-weight: 500;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-            animation: slideInUp 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-        }
-
-        .validation-status.valid {
-            background: rgba(34, 197, 94, 0.1);
-            color: var(--neon-green);
-            border: 1px solid var(--accent-primary);
-            box-shadow: 0 0 15px rgba(34, 197, 94, 0.2);
-        }
-
-        .validation-status.invalid {
-            background: rgba(239, 68, 68, 0.1);
-            color: #ff6b6b;
-            border: 1px solid var(--accent-error);
-            box-shadow: 0 0 15px rgba(239, 68, 68, 0.2);
-        }
-
-        /* Smooth scrolling */
-        html {
-            scroll-behavior: smooth;
-        }
-
-        /* Selection styles */
-        ::selection {
-            background: rgba(34, 197, 94, 0.3);
-            color: var(--text-primary);
-        }
-
-        ::-moz-selection {
-            background: rgba(34, 197, 94, 0.3);
-            color: var(--text-primary);
-        }
-
-        /* Focus styles */
-        *:focus {
-            outline: none;
-        }
-
-        /* Responsive design */
-        @media (max-width: 768px) {
-            body {
-                padding: 10px;
-            }
-
-            .main-content {
-                grid-template-columns: 1fr;
-            }
-            
-            .sidebar {
-                border-right: none;
-                border-top: 1px solid var(--border-primary);
-                max-height: none;
-            }
-
-            .header {
-                padding: 24px;
-            }
-
-            .header h1 {
-                font-size: 24px;
-            }
-
-            .header p {
-                font-size: 14px;
-            }
-
-            .editor-section {
-                padding: 24px;
-            }
-
-            .container {
-                border-radius: 16px;
-            }
-
-            .functions-list {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* Animation delays for staggered effects */
-        .sidebar-section:nth-child(1) { --i: 0; }
-        .sidebar-section:nth-child(2) { --i: 1; }
-        .sidebar-section:nth-child(3) { --i: 2; }
-        .sidebar-section:nth-child(4) { --i: 3; }
-
-        /* Ace Editor Dark Theme Overrides */
+        /* Ace Editor Theme Overrides */
         .ace-github-dark .ace_gutter {
             background: var(--bg-secondary) !important;
             color: var(--text-secondary) !important;
-            border-right: none !important;
         }
 
         .ace-github-dark {
@@ -802,41 +475,20 @@
             color: var(--accent-primary) !important;
         }
 
-        .ace-github-dark .ace_selection {
-            background: rgba(34, 197, 94, 0.2) !important;
+        .ace-github-dark .ace_marker-layer .ace_selection {
+            background: rgba(99, 102, 241, 0.2) !important;
         }
 
-        .ace-github-dark .ace_selected-word {
-            background: rgba(34, 197, 94, 0.1) !important;
-        }
-
-        .ace-github-dark .ace_active-line {
-            background: rgba(255, 255, 255, 0.03) !important;
-        }
-
-        /* Loading animation */
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        .loading-indicator::after {
-            content: '⟳';
-            margin-left: 4px;
-            animation: spin 1s linear infinite;
+        .ace-github-dark .ace_marker-layer .ace_selected-word {
+            background: rgba(99, 102, 241, 0.1) !important;
         }
     </style>
 </head>
-<body data-theme="dark">
+<body>
     <div class="container">
         <div class="header">
-            <div class="header-content">
-                <div>
-                    <h1>Formula Editor Pro</h1>
-                    <p>Professional formula editor with dark mode support</p>
-                </div>
-                <div class="theme-toggle" onclick="toggleTheme()"></div>
-            </div>
+            <h1>Formula Editor with GraphQL Spellcheck</h1>
+            <p>Real-time spellchecking and validation with GraphQL</p>
         </div>
         
         <div class="main-content">
@@ -844,25 +496,32 @@
                 <div class="editor-container">
                     <div class="editor-label">
                         Formula Editor
-                        <span class="loading-indicator" id="loadingIndicator">Evaluating</span>
+                        <span id="spellcheckIndicator" style="margin-left: auto; font-size: 11px; opacity: 0.6;"></span>
                     </div>
                     <div class="editor-wrapper" id="editorWrapper">
                         <div class="toolbar">
                             <button class="btn primary" onclick="evaluateFormula()">Evaluate</button>
                             <button class="btn" onclick="clearEditor()">Clear</button>
                             <button class="btn" onclick="insertSample()">Insert Sample</button>
-                            <button class="btn" onclick="validateSyntax()">Validate</button>
                         </div>
                         <div id="editor"></div>
                     </div>
-                    <div class="validation-status" id="validationStatus" style="display: none;"></div>
+                    
+                    <div class="spellcheck-status" id="spellcheckStatus">
+                        <div class="status-icon" id="statusIcon">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path d="M8 2v6m0 4v2m0-12a6 6 0 100 12 6 6 0 000-12z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <span id="statusText">Ready for input</span>
+                    </div>
+
+                    <div class="error-list" id="errorList" style="display: none;"></div>
                 </div>
 
-                <div class="status-section">
-                    <div class="result-container" id="resultContainer">
-                        <div class="result-label">Result</div>
-                        <div class="result-value" id="resultValue">Enter a formula to see the result...</div>
-                    </div>
+                <div class="result-container" id="resultContainer">
+                    <div class="result-label">Result</div>
+                    <div class="result-value" id="resultValue">Enter a formula to see the result...</div>
                 </div>
             </div>
 
@@ -878,41 +537,16 @@
                 </div>
 
                 <div class="sidebar-section">
-                    <div class="sidebar-title">Functions</div>
-                    <div class="functions-list" id="functionsList"></div>
-                </div>
-
-                <div class="sidebar-section">
-                    <div class="sidebar-title">Keyboard Shortcuts</div>
-                    <div class="shortcuts">
-                        <div class="shortcut-item">
-                            <span class="shortcut-key">⌘/Ctrl + Enter</span>
-                            <span>Evaluate formula</span>
-                        </div>
-                        <div class="shortcut-item">
-                            <span class="shortcut-key">⌘/Ctrl + Space</span>
-                            <span>Trigger autocomplete</span>
-                        </div>
-                        <div class="shortcut-item">
-                            <span class="shortcut-key">⌘/Ctrl + K</span>
-                            <span>Clear editor</span>
-                        </div>
-                        <div class="shortcut-item">
-                            <span class="shortcut-key">⌘/Ctrl + S</span>
-                            <span>Validate & save</span>
-                        </div>
-                        <div class="shortcut-item">
-                            <span class="shortcut-key">Tab</span>
-                            <span>Accept suggestion</span>
-                        </div>
-                        <div class="shortcut-item">
-                            <span class="shortcut-key">Esc</span>
-                            <span>Close autocomplete</span>
-                        </div>
-                    </div>
+                    <div class="sidebar-title">Available Functions</div>
+                    <div class="variable-list" id="functionsList"></div>
                 </div>
             </div>
         </div>
+    </div>
+
+    <div class="graphql-status" id="graphqlStatus">
+        <div class="spinner"></div>
+        <span>GraphQL query in progress...</span>
     </div>
 
     <!-- Ace Editor CDN -->
@@ -920,31 +554,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/ext-language_tools.js"></script>
 
     <script>
-        // Theme management
-        function toggleTheme() {
-            const body = document.body;
-            const currentTheme = body.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            
-            body.setAttribute('data-theme', newTheme);
-            
-            // Update editor theme
-            if (editor) {
-                const aceTheme = newTheme === 'dark' ? 'ace/theme/github-dark' : 'ace/theme/github';
-                editor.setTheme(aceTheme);
-            }
-            
-            // Store theme preference
-            localStorage.setItem('preferred-theme', newTheme);
-        }
-
-        // Load theme preference
-        function loadThemePreference() {
-            const savedTheme = localStorage.getItem('preferred-theme') || 'dark';
-            document.body.setAttribute('data-theme', savedTheme);
-        }
-
-        // Data sources (same as original)
+        // GraphQL endpoint configuration
+        const GRAPHQL_ENDPOINT = '/graphql'; // Mock endpoint
+        
+        // Data sources
         const measuredValues = {
             '$measuredValue_1': 42.5,
             '$measuredValue2': 38.2,
@@ -953,48 +566,36 @@
             '$pressure': 1013.25,
             '$voltage': 12.7,
             '$current': 2.4,
-            '$resistance': 5.29,
-            '$speed': 55.3,
-            '$distance': 127.8
+            '$resistance': 5.29
         };
 
         const constants = {
             '#constantsSqrtTwo': 1.4142135623730951,
             '#pi': 3.141592653589793,
             '#e': 2.718281828459045,
-            '#goldenRatio': 1.618033988749895,
             '#gravity': 9.80665,
-            '#lightSpeed': 299792458,
-            '#avogadro': 6.02214076e23,
-            '#planck': 6.62607015e-34,
-            '#boltzmann': 1.380649e-23,
-            '#gasConstant': 8.314462618
+            '#lightSpeed': 299792458
         };
 
         const functions = [
             'abs', 'acos', 'asin', 'atan', 'atan2',
             'ceil', 'cos', 'exp', 'floor', 'log',
-            'max', 'min', 'pow', 'random', 'round',
-            'sin', 'sqrt', 'tan', 'avg', 'sum'
+            'max', 'min', 'pow', 'round', 'sin', 
+            'sqrt', 'tan', 'avg', 'sum'
         ];
 
         // Initialize Ace Editor
         let editor;
-        let isValidating = false;
+        let spellcheckTimeout;
+        let currentErrors = [];
 
         function initializeEditor() {
             editor = ace.edit("editor");
-            
-            // Configure editor
-            const currentTheme = document.body.getAttribute('data-theme');
-            const aceTheme = currentTheme === 'dark' ? 'ace/theme/github-dark' : 'ace/theme/github';
-            
-            editor.setTheme(aceTheme);
+            editor.setTheme("ace/theme/github-dark");
             editor.session.setMode("ace/mode/javascript");
-            editor.setFontSize(16);
+            editor.setFontSize(15);
             editor.setShowPrintMargin(false);
             editor.setHighlightActiveLine(true);
-            editor.setShowFoldWidgets(false);
             
             // Enable autocomplete
             ace.require("ace/ext/language_tools");
@@ -1006,13 +607,8 @@
                 tabSize: 2
             });
 
-            // Set up custom syntax highlighting mode
             setupCustomMode();
-            
-            // Set up autocomplete
             setupAutocompletion();
-            
-            // Set up event handlers
             setupEventHandlers();
             
             // Set default formula
@@ -1020,7 +616,7 @@
         }
 
         function setupCustomMode() {
-            // Define custom highlighting rules for formulas
+            // Custom syntax highlighting for formulas
             ace.define("ace/mode/formula_highlight_rules", ["require", "exports", "module", "ace/lib/oop", "ace/mode/text_highlight_rules"], function(require, exports, module) {
                 var oop = require("../lib/oop");
                 var TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
@@ -1038,7 +634,7 @@
                             },
                             {
                                 token: "support.function",
-                                regex: /\b(?:abs|acos|asin|atan|atan2|ceil|cos|exp|floor|log|max|min|pow|random|round|sin|sqrt|tan|avg|sum)\b/
+                                regex: new RegExp(`\\b(?:${functions.join('|')})\\b`)
                             },
                             {
                                 token: "constant.numeric",
@@ -1055,10 +651,6 @@
                             {
                                 token: "paren.rparen",
                                 regex: /[)]/
-                            },
-                            {
-                                token: "text",
-                                regex: /\s+/
                             }
                         ]
                     };
@@ -1068,7 +660,6 @@
                 exports.FormulaHighlightRules = FormulaHighlightRules;
             });
 
-            // Define custom mode
             ace.define("ace/mode/formula", ["require", "exports", "module", "ace/lib/oop", "ace/mode/text", "ace/mode/formula_highlight_rules"], function(require, exports, module) {
                 var oop = require("../lib/oop");
                 var TextMode = require("./text").Mode;
@@ -1076,19 +667,16 @@
 
                 var Mode = function() {
                     this.HighlightRules = FormulaHighlightRules;
-                    this.$behaviour = this.$defaultBehaviour;
                 };
                 oop.inherits(Mode, TextMode);
 
                 exports.Mode = Mode;
             });
 
-            // Apply custom mode
             editor.session.setMode("ace/mode/formula");
         }
 
         function setupAutocompletion() {
-            // Custom completer for variables and functions
             const customCompleter = {
                 getCompletions: function(editor, session, pos, prefix, callback) {
                     const completions = [];
@@ -1134,14 +722,15 @@
         }
 
         function setupEventHandlers() {
-            // Real-time validation
-            editor.session.on('change', debounce(() => {
-                if (!isValidating) {
-                    validateSyntax();
-                }
-            }, 500));
+            // Real-time spellcheck on change
+            editor.session.on('change', () => {
+                clearTimeout(spellcheckTimeout);
+                spellcheckTimeout = setTimeout(() => {
+                    performSpellcheck();
+                }, 300);
+            });
 
-            // Keyboard shortcuts - Standard conventions
+            // Keyboard shortcuts
             editor.commands.addCommand({
                 name: 'evaluate',
                 bindKey: {win: 'Ctrl-Enter', mac: 'Command-Enter'},
@@ -1153,21 +742,405 @@
                 bindKey: {win: 'Ctrl-K', mac: 'Command-K'},
                 exec: clearEditor
             });
+        }
 
-            editor.commands.addCommand({
-                name: 'validate',
-                bindKey: {win: 'Ctrl-S', mac: 'Command-S'},
-                exec: function() {
-                    validateSyntax();
-                    // Prevent default browser save
-                    return false;
+        async function performSpellcheck() {
+            const formula = editor.getValue().trim();
+            
+            if (!formula) {
+                updateSpellcheckStatus('ready', 'Ready for input');
+                clearErrors();
+                return;
+            }
+
+            updateSpellcheckStatus('checking', 'Checking formula...');
+            showGraphQLStatus(true);
+
+            try {
+                const response = await executeGraphQLQuery({
+                    query: `
+                        query SpellcheckFormula($formula: String!, $availableVariables: VariableDefinitions!) {
+                            spellcheckFormula(formula: $formula, availableVariables: $availableVariables) {
+                                isValid
+                                errors {
+                                    type
+                                    message
+                                    position {
+                                        line
+                                        column
+                                        length
+                                    }
+                                    suggestion
+                                }
+                                warnings {
+                                    type
+                                    message
+                                    position {
+                                        line
+                                        column
+                                    }
+                                }
+                            }
+                        }
+                    `,
+                    variables: {
+                        formula: formula,
+                        availableVariables: {
+                            measuredValues: Object.keys(measuredValues),
+                            constants: Object.keys(constants),
+                            functions: functions
+                        }
+                    }
+                });
+
+                const result = response.data.spellcheckFormula;
+                
+                if (result.isValid) {
+                    updateSpellcheckStatus('valid', 'Formula syntax is valid');
+                    clearErrors();
+                } else {
+                    updateSpellcheckStatus('invalid', `Found ${result.errors.length} error(s)`);
+                    displayErrors(result.errors);
+                    highlightErrors(result.errors);
+                }
+            } catch (error) {
+                console.error('GraphQL spellcheck error:', error);
+                updateSpellcheckStatus('error', 'Spellcheck service unavailable');
+            } finally {
+                showGraphQLStatus(false);
+            }
+        }
+
+        function updateSpellcheckStatus(status, message) {
+            const statusEl = document.getElementById('spellcheckStatus');
+            const statusIcon = document.getElementById('statusIcon');
+            const statusText = document.getElementById('statusText');
+
+            statusEl.className = `spellcheck-status ${status}`;
+            statusText.textContent = message;
+
+            // Update icon based on status
+            switch (status) {
+                case 'checking':
+                    statusIcon.innerHTML = '<div class="spinner"></div>';
+                    break;
+                case 'valid':
+                    statusIcon.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 111.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg>';
+                    break;
+                case 'invalid':
+                    statusIcon.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 2a6 6 0 100 12A6 6 0 008 2zM7 7V5h2v2H7zm0 4V9h2v2H7z"/></svg>';
+                    break;
+                default:
+                    statusIcon.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v6m0 4v2m0-12a6 6 0 100 12 6 6 0 000-12z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+            }
+        }
+
+        function displayErrors(errors) {
+            const errorList = document.getElementById('errorList');
+            errorList.innerHTML = '';
+            errorList.style.display = errors.length > 0 ? 'flex' : 'none';
+
+            errors.forEach(error => {
+                const errorItem = document.createElement('div');
+                errorItem.className = 'error-item';
+                errorItem.innerHTML = `
+                    <svg class="error-icon" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M8 2a6 6 0 100 12A6 6 0 008 2zM7 7V5h2v2H7zm0 4V9h2v2H7z"/>
+                    </svg>
+                    <div class="error-details">
+                        <div>${error.message}</div>
+                        ${error.position ? `<div class="error-position">Line ${error.position.line}, Column ${error.position.column}</div>` : ''}
+                        ${error.suggestion ? `<div style="margin-top: 4px; font-size: 11px; opacity: 0.8;">Suggestion: ${error.suggestion}</div>` : ''}
+                    </div>
+                `;
+                errorList.appendChild(errorItem);
+            });
+        }
+
+        function highlightErrors(errors) {
+            // Clear existing error markers
+            editor.session.clearAnnotations();
+            
+            const annotations = errors.map(error => ({
+                row: (error.position?.line || 1) - 1,
+                column: error.position?.column || 0,
+                text: error.message,
+                type: "error"
+            }));
+            
+            editor.session.setAnnotations(annotations);
+        }
+
+        function clearErrors() {
+            editor.session.clearAnnotations();
+            document.getElementById('errorList').style.display = 'none';
+        }
+
+        function showGraphQLStatus(show) {
+            const statusEl = document.getElementById('graphqlStatus');
+            statusEl.classList.toggle('show', show);
+            statusEl.classList.toggle('active', show);
+        }
+
+        async function executeGraphQLQuery(query) {
+            // Simulate GraphQL request
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            // Mock response based on formula validation
+            const formula = query.variables.formula;
+            const errors = [];
+
+            // Check for undefined variables
+            const variableMatches = formula.match(/[\$#][a-zA-Z_][a-zA-Z0-9_]*/g) || [];
+            variableMatches.forEach((variable, index) => {
+                if (!measuredValues.hasOwnProperty(variable) && !constants.hasOwnProperty(variable)) {
+                    errors.push({
+                        type: 'undefined_variable',
+                        message: `Undefined variable: ${variable}`,
+                        position: {
+                            line: 1,
+                            column: formula.indexOf(variable) + 1,
+                            length: variable.length
+                        },
+                        suggestion: findClosestMatch(variable, [...Object.keys(measuredValues), ...Object.keys(constants)])
+                    });
                 }
             });
 
-            // Focus management
-            editor.on('focus', () => {
-                document.getElementById('editorWrapper').classList.remove('error');
+            // Check for bare identifiers (not prefixed with $ or # and not functions)
+            // This regex finds identifiers that are NOT: preceded by $ or #, part of a number, or followed by (
+            const bareIdentifierRegex = /(?<![a-zA-Z0-9_$#])\b([a-zA-Z_][a-zA-Z0-9_]*)\b(?!\s*\()/g;
+            let match;
+            while ((match = bareIdentifierRegex.exec(formula)) !== null) {
+                const identifier = match[1];
+                // Skip if it's a known function (even without parentheses, which would be an error)
+                if (!functions.includes(identifier) && !['Math'].includes(identifier)) {
+                    errors.push({
+                        type: 'undefined_identifier',
+                        message: `Undefined identifier: ${identifier}`,
+                        position: {
+                            line: 1,
+                            column: match.index + 1,
+                            length: identifier.length
+                        },
+                        suggestion: (() => {
+                            // Special case for common typos
+                            if (identifier === 'mea' || identifier === 'measur') {
+                                return 'Variables must start with $. Did you mean "$measuredValue_1"?';
+                            }
+                            const suggestion = findClosestMatch(identifier, [
+                                ...Object.keys(measuredValues), 
+                                ...Object.keys(constants), 
+                                ...functions.map(f => f + '()')
+                            ]);
+                            return `Variables must start with $ or #. ${suggestion || ''}`;
+                        })()
+                    });
+                }
+            }
+
+            // Check for undefined functions
+            const functionMatches = formula.match(/\b[a-zA-Z_][a-zA-Z0-9_]*(?=\s*\()/g) || [];
+            functionMatches.forEach(func => {
+                if (!functions.includes(func) && func !== 'Math') {
+                    errors.push({
+                        type: 'undefined_function',
+                        message: `Undefined function: ${func}`,
+                        position: {
+                            line: 1,
+                            column: formula.indexOf(func) + 1,
+                            length: func.length
+                        },
+                        suggestion: findClosestMatch(func, functions)
+                    });
+                }
             });
+
+            // Check for balanced parentheses
+            let parenCount = 0;
+            for (let i = 0; i < formula.length; i++) {
+                if (formula[i] === '(') parenCount++;
+                else if (formula[i] === ')') parenCount--;
+                if (parenCount < 0) {
+                    errors.push({
+                        type: 'syntax_error',
+                        message: 'Unmatched closing parenthesis',
+                        position: { line: 1, column: i + 1 }
+                    });
+                    break;
+                }
+            }
+            if (parenCount > 0) {
+                errors.push({
+                    type: 'syntax_error',
+                    message: 'Unmatched opening parenthesis'
+                });
+            }
+
+            return {
+                data: {
+                    spellcheckFormula: {
+                        isValid: errors.length === 0,
+                        errors: errors,
+                        warnings: []
+                    }
+                }
+            };
+        }
+
+        function findClosestMatch(input, options) {
+            // Simple Levenshtein distance for suggestions
+            let bestMatch = null;
+            let bestDistance = Infinity;
+
+            // Clean input for comparison
+            const cleanInput = input.replace(/^[$#]/, '');
+
+            options.forEach(option => {
+                // For variables/constants, compare without prefix
+                const cleanOption = option.replace(/^[$#]/, '');
+                const distance = levenshteinDistance(cleanInput.toLowerCase(), cleanOption.toLowerCase());
+                
+                // Also check if input is a prefix of option
+                const isPrefixMatch = cleanOption.toLowerCase().startsWith(cleanInput.toLowerCase());
+                const adjustedDistance = isPrefixMatch ? distance * 0.5 : distance;
+                
+                if (adjustedDistance < bestDistance && adjustedDistance <= 3) {
+                    bestDistance = adjustedDistance;
+                    bestMatch = option;
+                }
+            });
+
+            return bestMatch ? `Did you mean "${bestMatch}"?` : null;
+        }
+
+        function levenshteinDistance(a, b) {
+            const matrix = [];
+            for (let i = 0; i <= b.length; i++) {
+                matrix[i] = [i];
+            }
+            for (let j = 0; j <= a.length; j++) {
+                matrix[0][j] = j;
+            }
+            for (let i = 1; i <= b.length; i++) {
+                for (let j = 1; j <= a.length; j++) {
+                    if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i - 1][j - 1] + 1,
+                            matrix[i][j - 1] + 1,
+                            matrix[i - 1][j] + 1
+                        );
+                    }
+                }
+            }
+            return matrix[b.length][a.length];
+        }
+
+        async function evaluateFormula() {
+            const formula = editor.getValue().trim();
+            const resultContainer = document.getElementById('resultContainer');
+            const resultValue = document.getElementById('resultValue');
+
+            if (!formula) {
+                resultContainer.className = 'result-container';
+                resultValue.textContent = 'Enter a formula to see the result...';
+                return;
+            }
+
+            showGraphQLStatus(true);
+            document.getElementById('graphqlStatus').innerHTML = '<div class="spinner"></div><span>Evaluating formula...</span>';
+
+            try {
+                const response = await executeGraphQLEvaluation(formula);
+                
+                if (response.data.evaluateFormula.success) {
+                    resultContainer.className = 'result-container success';
+                    resultValue.textContent = response.data.evaluateFormula.result;
+                } else {
+                    resultContainer.className = 'result-container error';
+                    resultValue.textContent = `Error: ${response.data.evaluateFormula.error}`;
+                }
+            } catch (error) {
+                resultContainer.className = 'result-container error';
+                resultValue.textContent = `Error: ${error.message}`;
+            } finally {
+                showGraphQLStatus(false);
+            }
+        }
+
+        async function executeGraphQLEvaluation(formula) {
+            // Simulate GraphQL evaluation
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            try {
+                // Process formula
+                let processedFormula = formula;
+                
+                // Replace variables
+                Object.entries(measuredValues).forEach(([key, value]) => {
+                    processedFormula = processedFormula.replace(new RegExp('\\' + key, 'g'), value);
+                });
+                
+                Object.entries(constants).forEach(([key, value]) => {
+                    processedFormula = processedFormula.replace(new RegExp('\\' + key, 'g'), value);
+                });
+
+                // Replace functions
+                functions.forEach(func => {
+                    processedFormula = processedFormula.replace(new RegExp(`\\b${func}\\(`, 'g'), `Math.${func}(`);
+                });
+
+                // Custom functions
+                processedFormula = processedFormula
+                    .replace(/\bavg\(([^)]+)\)/g, '(($1) / arguments.length)')
+                    .replace(/\bsum\(([^)]+)\)/g, '($1)');
+
+                const result = Function('"use strict"; return (' + processedFormula + ')')();
+                
+                return {
+                    data: {
+                        evaluateFormula: {
+                            success: true,
+                            result: Number(result.toFixed(10)).toString(),
+                            executionTime: Math.random() * 50 + 10
+                        }
+                    }
+                };
+            } catch (error) {
+                return {
+                    data: {
+                        evaluateFormula: {
+                            success: false,
+                            error: error.message
+                        }
+                    }
+                };
+            }
+        }
+
+        function clearEditor() {
+            editor.setValue('', -1);
+            editor.focus();
+            clearErrors();
+            updateSpellcheckStatus('ready', 'Ready for input');
+            document.getElementById('resultContainer').className = 'result-container';
+            document.getElementById('resultValue').textContent = 'Enter a formula to see the result...';
+        }
+
+        function insertSample() {
+            const samples = [
+                '($measuredValue_1 * 100 + $measuredValue2) * #constantsSqrtTwo / 2',
+                'sqrt($voltage * $current) + #pi',
+                'max($temperature, $humidity) * min(#gravity, #e)',
+                'sin(#pi / 4) * $distance + cos(#pi / 3) * $speed',
+                '$unknownVariable + invalidFunction($temperature)' // Intentional errors
+            ];
+            
+            const randomSample = samples[Math.floor(Math.random() * samples.length)];
+            editor.setValue(randomSample, -1);
+            editor.focus();
         }
 
         function renderSidebar() {
@@ -1181,7 +1154,11 @@
                     <div class="variable-name">${key}</div>
                     <div class="variable-value">Value: ${value}</div>
                 `;
-                item.addEventListener('click', () => insertVariable(key));
+                item.addEventListener('click', () => {
+                    const cursor = editor.getCursorPosition();
+                    editor.session.insert(cursor, key);
+                    editor.focus();
+                });
                 measuredContainer.appendChild(item);
             });
 
@@ -1195,7 +1172,11 @@
                     <div class="variable-name">${key}</div>
                     <div class="variable-value">Value: ${value}</div>
                 `;
-                item.addEventListener('click', () => insertVariable(key));
+                item.addEventListener('click', () => {
+                    const cursor = editor.getCursorPosition();
+                    editor.session.insert(cursor, key);
+                    editor.focus();
+                });
                 constantsContainer.appendChild(item);
             });
 
@@ -1204,283 +1185,28 @@
             functionsContainer.innerHTML = '';
             functions.forEach(func => {
                 const item = document.createElement('div');
-                item.className = 'function-item';
-                item.textContent = func + '()';
-                item.addEventListener('click', () => insertFunction(func));
+                item.className = 'variable-item';
+                item.innerHTML = `
+                    <div class="variable-name">${func}()</div>
+                    <div class="variable-value">Function</div>
+                `;
+                item.addEventListener('click', () => {
+                    const cursor = editor.getCursorPosition();
+                    editor.session.insert(cursor, func + '()');
+                    editor.moveCursorTo(cursor.row, cursor.column + func.length + 1);
+                    editor.focus();
+                });
                 functionsContainer.appendChild(item);
             });
         }
 
-        function insertVariable(variable) {
-            const cursor = editor.getCursorPosition();
-            editor.session.insert(cursor, variable);
-            editor.focus();
-        }
-
-        function insertFunction(func) {
-            const cursor = editor.getCursorPosition();
-            editor.session.insert(cursor, func + '()');
-            // Move cursor inside parentheses
-            const newPos = editor.getCursorPosition();
-            editor.moveCursorTo(newPos.row, newPos.column - 1);
-            editor.focus();
-        }
-
-        function validateSyntax() {
-            isValidating = true;
-            const formula = editor.getValue().trim();
-            const statusEl = document.getElementById('validationStatus');
-            
-            if (!formula) {
-                statusEl.style.display = 'none';
-                clearAnnotations();
-                isValidating = false;
-                return;
-            }
-
-            try {
-                // Basic syntax validation
-                const errors = [];
-                
-                // Check for balanced parentheses
-                let parenCount = 0;
-                for (let i = 0; i < formula.length; i++) {
-                    if (formula[i] === '(') parenCount++;
-                    else if (formula[i] === ')') parenCount--;
-                    if (parenCount < 0) {
-                        errors.push('Unmatched closing parenthesis');
-                        break;
-                    }
-                }
-                if (parenCount > 0) {
-                    errors.push('Unmatched opening parenthesis');
-                }
-
-                // Check for undefined variables
-                const variableMatches = formula.match(/[\$#][a-zA-Z_][a-zA-Z0-9_]*/g) || [];
-                variableMatches.forEach(variable => {
-                    if (!measuredValues.hasOwnProperty(variable) && !constants.hasOwnProperty(variable)) {
-                        errors.push(`Undefined variable: ${variable}`);
-                    }
-                });
-
-                // Check for undefined functions
-                const functionMatches = formula.match(/\b[a-zA-Z_][a-zA-Z0-9_]*(?=\s*\()/g) || [];
-                functionMatches.forEach(func => {
-                    if (!functions.includes(func)) {
-                        errors.push(`Undefined function: ${func}`);
-                    }
-                });
-
-                if (errors.length > 0) {
-                    statusEl.className = 'validation-status invalid';
-                    statusEl.textContent = 'Syntax errors: ' + errors.join(', ');
-                    statusEl.style.display = 'block';
-                    document.getElementById('editorWrapper').classList.add('error');
-                    
-                    // Add annotations to editor
-                    editor.session.setAnnotations([{
-                        row: 0,
-                        column: 0,
-                        text: errors.join(', '),
-                        type: "error"
-                    }]);
-                } else {
-                    statusEl.className = 'validation-status valid';
-                    statusEl.textContent = 'Syntax is valid';
-                    statusEl.style.display = 'block';
-                    document.getElementById('editorWrapper').classList.remove('error');
-                    clearAnnotations();
-                }
-            } catch (error) {
-                statusEl.className = 'validation-status invalid';
-                statusEl.textContent = 'Validation error: ' + error.message;
-                statusEl.style.display = 'block';
-                document.getElementById('editorWrapper').classList.add('error');
-            }
-            
-            isValidating = false;
-        }
-
-        function clearAnnotations() {
-            editor.session.clearAnnotations();
-        }
-
-        async function evaluateFormula() {
-            const formula = editor.getValue().trim();
-            const resultContainer = document.getElementById('resultContainer');
-            const resultValue = document.getElementById('resultValue');
-            const loadingIndicator = document.getElementById('loadingIndicator');
-
-            if (!formula) {
-                resultContainer.className = 'result-container';
-                resultValue.textContent = 'Enter a formula to see the result...';
-                return;
-            }
-
-            // Show loading
-            loadingIndicator.style.display = 'inline';
-
-            try {
-                // Simulate server-side evaluation with GraphQL-like query
-                const result = await simulateServerEvaluation(formula);
-                
-                resultContainer.className = 'result-container success';
-                resultValue.textContent = result;
-            } catch (error) {
-                resultContainer.className = 'result-container error';
-                resultValue.textContent = `Error: ${error.message}`;
-            } finally {
-                loadingIndicator.style.display = 'none';
-            }
-        }
-
-        async function simulateServerEvaluation(formula) {
-            // Simulate network delay
-            await new Promise(resolve => setTimeout(resolve, Math.random() * 1000 + 500));
-
-            // Mock GraphQL query simulation
-            console.log('Mock GraphQL Query:', {
-                query: `
-                    query EvaluateFormula($formula: String!, $variables: VariableInput!) {
-                        evaluateFormula(formula: $formula, variables: $variables) {
-                            result
-                            errors
-                            executionTime
-                        }
-                    }
-                `,
-                variables: {
-                    formula: formula,
-                    variables: {
-                        measuredValues: measuredValues,
-                        constants: constants
-                    }
-                }
-            });
-
-            // Replace variables with their values
-            let processedFormula = formula;
-            
-            // Replace measured values
-            Object.entries(measuredValues).forEach(([key, value]) => {
-                const regex = new RegExp('\\' + key, 'g');
-                processedFormula = processedFormula.replace(regex, value.toString());
-            });
-
-            // Replace constants
-            Object.entries(constants).forEach(([key, value]) => {
-                const regex = new RegExp('\\' + key, 'g');
-                processedFormula = processedFormula.replace(regex, value.toString());
-            });
-
-            // Replace function calls with Math equivalents
-            processedFormula = processedFormula
-                .replace(/\babs\(/g, 'Math.abs(')
-                .replace(/\bacos\(/g, 'Math.acos(')
-                .replace(/\basin\(/g, 'Math.asin(')
-                .replace(/\batan\(/g, 'Math.atan(')
-                .replace(/\batan2\(/g, 'Math.atan2(')
-                .replace(/\bceil\(/g, 'Math.ceil(')
-                .replace(/\bcos\(/g, 'Math.cos(')
-                .replace(/\bexp\(/g, 'Math.exp(')
-                .replace(/\bfloor\(/g, 'Math.floor(')
-                .replace(/\blog\(/g, 'Math.log(')
-                .replace(/\bmax\(/g, 'Math.max(')
-                .replace(/\bmin\(/g, 'Math.min(')
-                .replace(/\bpow\(/g, 'Math.pow(')
-                .replace(/\brandom\(/g, 'Math.random(')
-                .replace(/\bround\(/g, 'Math.round(')
-                .replace(/\bsin\(/g, 'Math.sin(')
-                .replace(/\bsqrt\(/g, 'Math.sqrt(')
-                .replace(/\btan\(/g, 'Math.tan(');
-
-            // Handle custom functions like avg and sum
-            processedFormula = processedFormula
-                .replace(/\bavg\(([^)]+)\)/g, '(($1) / arguments.length)')
-                .replace(/\bsum\(([^)]+)\)/g, '($1)');
-
-            // Evaluate the expression safely
-            try {
-                const result = Function('"use strict"; return (' + processedFormula + ')')();
-                
-                if (typeof result !== 'number' || !isFinite(result)) {
-                    throw new Error('Invalid result: ' + result);
-                }
-                
-                return Number(result.toFixed(10)).toString();
-            } catch (error) {
-                throw new Error('Evaluation failed: ' + error.message);
-            }
-        }
-
-        function clearEditor() {
-            editor.setValue('', -1);
-            editor.focus();
-            document.getElementById('resultContainer').className = 'result-container';
-            document.getElementById('resultValue').textContent = 'Enter a formula to see the result...';
-            document.getElementById('validationStatus').style.display = 'none';
-        }
-
-        function insertSample() {
-            const samples = [
-                '($measuredValue_1 * 100 + $measuredValue2) * #constantsSqrtTwo / 2',
-                'sqrt($voltage * $current) + #pi',
-                'max($temperature, $humidity) * min(#gravity, #e)',
-                'sin(#pi / 4) * $distance + cos(#pi / 3) * $speed',
-                'pow($resistance, 2) * $current + log(#avogadro)',
-                'abs($temperature - 20) * #boltzmann / #planck'
-            ];
-            
-            const randomSample = samples[Math.floor(Math.random() * samples.length)];
-            editor.setValue(randomSample, -1);
-            editor.focus();
-        }
-
-        // Utility function for debouncing
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
-
-        // Handle source changes gracefully
-        function simulateSourceChange() {
-            // Simulate deletion of a measured value
-            if (Math.random() > 0.5) {
-                const keys = Object.keys(measuredValues);
-                if (keys.length > 3) {
-                    const keyToDelete = keys[Math.floor(Math.random() * keys.length)];
-                    delete measuredValues[keyToDelete];
-                    console.log(`Simulated deletion of ${keyToDelete}`);
-                }
-            }
-
-            // Simulate addition of a new measured value
-            if (Math.random() > 0.7) {
-                const newVarName = `$newVariable${Math.floor(Math.random() * 1000)}`;
-                measuredValues[newVarName] = Math.random() * 100;
-                console.log(`Simulated addition of ${newVarName}`);
-            }
-
-            renderSidebar();
-            validateSyntax();
-        }
-
         // Initialize the application
         document.addEventListener('DOMContentLoaded', () => {
-            loadThemePreference();
             initializeEditor();
             renderSidebar();
             
-            // Simulate periodic source changes
-            setInterval(simulateSourceChange, 15000);
+            // Initial spellcheck
+            setTimeout(performSpellcheck, 100);
         });
     </script>
 </body>
