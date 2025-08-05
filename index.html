@@ -9,32 +9,32 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* Bright Theme for Better Visibility */
-            --bg-primary: #f8f9fa;
+            /* Bright Green Theme - Easy on Eyes */
+            --bg-primary: #f0fdf4;
             --bg-secondary: #ffffff;
-            --bg-tertiary: #f3f4f6;
+            --bg-tertiary: #ecfdf5;
             --bg-card: rgba(255, 255, 255, 0.98);
-            --bg-glass: rgba(248, 249, 250, 0.8);
-            --bg-glass-hover: rgba(241, 243, 245, 0.9);
+            --bg-glass: rgba(240, 253, 244, 0.85);
+            --bg-glass-hover: rgba(220, 252, 231, 0.9);
             
-            --text-primary: #111827;
-            --text-secondary: #4b5563;
-            --text-muted: #6b7280;
+            --text-primary: #064e3b;
+            --text-secondary: #047857;
+            --text-muted: #059669;
             
-            --border-primary: rgba(0, 0, 0, 0.12);
-            --border-secondary: rgba(0, 0, 0, 0.06);
-            --border-focus: rgba(59, 130, 246, 0.5);
+            --border-primary: rgba(16, 185, 129, 0.2);
+            --border-secondary: rgba(16, 185, 129, 0.1);
+            --border-focus: rgba(16, 185, 129, 0.5);
             
-            --accent-primary: #2563eb;
-            --accent-secondary: #3b82f6;
-            --accent-tertiary: #7c3aed;
+            --accent-primary: #10b981;
+            --accent-secondary: #059669;
+            --accent-tertiary: #047857;
             --accent-warning: #f59e0b;
             --accent-error: #dc2626;
-            --accent-success: #059669;
+            --accent-success: #10b981;
             
             --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
-            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px rgba(16, 185, 129, 0.1);
+            --shadow-lg: 0 10px 15px rgba(16, 185, 129, 0.15);
         }
 
         * {
@@ -46,7 +46,7 @@
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: var(--bg-primary);
-            background-image: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            background-image: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #d1fae5 100%);
             background-attachment: fixed;
             min-height: 100vh;
             padding: 20px;
@@ -78,10 +78,11 @@
         }
 
         .header {
-            background: var(--bg-secondary);
-            color: var(--text-primary);
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
             padding: 24px 32px;
             border-bottom: 1px solid var(--border-primary);
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.1);
         }
 
         .header h1 {
@@ -93,7 +94,7 @@
 
         .header p {
             font-size: 14px;
-            color: var(--text-secondary);
+            color: rgba(255, 255, 255, 0.9);
         }
 
         .main-content {
@@ -184,6 +185,7 @@
             background: var(--bg-glass-hover);
             border-color: var(--accent-primary);
             transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
         }
 
         .btn:active {
@@ -194,11 +196,13 @@
             background: var(--accent-primary);
             color: white;
             border-color: var(--accent-primary);
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
         }
 
         .btn.primary:hover {
             background: var(--accent-secondary);
             border-color: var(--accent-secondary);
+            box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
         }
 
         /* Error indicators in editor */
@@ -214,7 +218,7 @@
 
         .ace_editor .ace_gutter-cell.ace_error {
             background-image: none !important;
-            background-color: #fee2e2 !important;
+            background-color: #fef2f2 !important;
             border-left: 4px solid #dc2626 !important;
         }
 
@@ -805,78 +809,78 @@
             }
         }
 
-        /* Ace Editor Theme Overrides for Bright Theme */
+        /* Ace Editor Theme Overrides for Green Theme */
         .ace_editor .ace_gutter {
-            background: #f8f9fa !important;
-            color: #6b7280 !important;
-            border-right: 1px solid #e5e7eb !important;
+            background: #f0fdf4 !important;
+            color: #059669 !important;
+            border-right: 1px solid #d1fae5 !important;
         }
 
         .ace_editor {
             background-color: #ffffff !important;
-            color: #111827 !important;
+            color: #064e3b !important;
         }
 
         .ace_editor .ace_cursor {
-            color: #2563eb !important;
-            border-color: #2563eb !important;
+            color: #059669 !important;
+            border-color: #059669 !important;
         }
 
         .ace_editor .ace_marker-layer .ace_selection {
-            background: rgba(37, 99, 235, 0.15) !important;
+            background: rgba(16, 185, 129, 0.2) !important;
         }
 
         .ace_editor .ace_marker-layer .ace_selected-word {
-            background: rgba(37, 99, 235, 0.1) !important;
+            background: rgba(16, 185, 129, 0.15) !important;
         }
 
-        /* Syntax highlighting for bright theme */
+        /* Syntax highlighting for green theme */
         .ace_editor .ace_keyword {
-            color: #7c3aed !important;
+            color: #047857 !important;
             font-weight: 600 !important;
         }
 
         .ace_editor .ace_constant.ace_numeric {
-            color: #059669 !important;
+            color: #0891b2 !important;
             font-weight: 600 !important;
         }
 
         .ace_editor .ace_variable {
-            color: #2563eb !important;
+            color: #059669 !important;
             font-weight: 500 !important;
         }
 
         .ace_editor .ace_variable.ace_measured {
-            color: #2563eb !important;
+            color: #10b981 !important;
             font-weight: 600 !important;
         }
 
         .ace_editor .ace_variable.ace_constant {
-            color: #7c3aed !important;
+            color: #0d9488 !important;
             font-weight: 600 !important;
         }
 
         .ace_editor .ace_support.ace_function {
-            color: #dc2626 !important;
+            color: #0e7490 !important;
             font-weight: 600 !important;
         }
 
         .ace_editor .ace_keyword.ace_operator {
-            color: #f59e0b !important;
+            color: #ea580c !important;
             font-weight: 700 !important;
         }
 
         .ace_editor .ace_paren {
-            color: #6b7280 !important;
+            color: #065f46 !important;
             font-weight: 600 !important;
         }
 
         .ace_editor .ace_string {
-            color: #dc2626 !important;
+            color: #b91c1c !important;
         }
 
         .ace_editor .ace_comment {
-            color: #9ca3af !important;
+            color: #6b7280 !important;
             font-style: italic !important;
         }
     </style>
@@ -1413,10 +1417,16 @@
                 });
             }
 
-            // Check for invalid hash symbols (numbers after #)
-            const invalidHashRegex = /#\d+/g;
+            // Check for invalid hash symbols (numbers after # or multiple #)
+            const invalidHashRegex = /(#{2,}[a-zA-Z_][a-zA-Z0-9_]*|#\d+)/g;
             let hashMatch;
             while ((hashMatch = invalidHashRegex.exec(formula)) !== null) {
+                let suggestion = 'Constants must start with a single # followed by a letter';
+                if (hashMatch[0].startsWith('##')) {
+                    suggestion = 'Constants must start with a single # symbol, not multiple';
+                } else if (/^#\d/.test(hashMatch[0])) {
+                    suggestion = 'Constants must start with # followed by a letter, not a number';
+                }
                 errors.push({
                     type: 'syntax_error',
                     message: `Invalid constant syntax: ${hashMatch[0]}`,
@@ -1425,7 +1435,7 @@
                         column: hashMatch.index + 1,
                         length: hashMatch[0].length
                     },
-                    suggestion: 'Constants must start with # followed by a letter, not a number'
+                    suggestion: suggestion
                 });
             }
 
