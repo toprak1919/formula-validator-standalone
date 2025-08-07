@@ -1401,19 +1401,29 @@
                 }
             });
 
-            // Check for incomplete division operations
-            const incompleteDivisionRegex = /\/\s*$/;
-            if (incompleteDivisionRegex.test(formula)) {
-                const match = formula.match(/\/\s*$/);
+            // Check for incomplete operations (trailing operators)
+            const incompleteOperatorRegex = /[+\-*/^%]\s*$/;
+            const operatorMatch = formula.match(incompleteOperatorRegex);
+            if (operatorMatch) {
+                const operator = operatorMatch[0].trim();
+                const operatorNames = {
+                    '+': 'addition',
+                    '-': 'subtraction',
+                    '*': 'multiplication',
+                    '/': 'division',
+                    '^': 'exponentiation',
+                    '%': 'modulo'
+                };
+                const operatorName = operatorNames[operator] || 'operation';
                 errors.push({
                     type: 'syntax_error',
-                    message: 'Incomplete division operation',
+                    message: `Incomplete ${operatorName} operation`,
                     position: {
                         line: 1,
-                        column: formula.lastIndexOf('/') + 1,
+                        column: formula.lastIndexOf(operator) + 1,
                         length: 1
                     },
-                    suggestion: 'Division operator requires a value after it'
+                    suggestion: `The ${operator} operator requires a value after it`
                 });
             }
 
