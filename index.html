@@ -995,10 +995,16 @@
     <!-- Ace Editor CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/ace.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/ext-language_tools.js"></script>
+    
+    <!-- Math.js for formula parsing and evaluation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.2.1/math.min.js"></script>
 
     <script>
         // GraphQL endpoint configuration
         const GRAPHQL_ENDPOINT = '/graphql'; // Mock endpoint
+        
+        // Initialize math.js
+        const mathParser = math.parser();
         
         // Data sources
         const measuredValues = {
@@ -1026,6 +1032,43 @@
             'max', 'min', 'pow', 'round', 'sin', 
             'sqrt', 'tan', 'avg', 'sum'
         ];
+        
+        // Helper function to prepare formula for math.js
+        function prepareFormulaForMathJS(formula) {
+            let prepared = formula;
+            
+            // Replace $ variables with valid JavaScript identifiers
+            Object.keys(measuredValues).forEach(key => {
+                const varName = key.replace('$', 'var_');
+                prepared = prepared.replace(new RegExp('\\' + key, 'g'), varName);
+            });
+            
+            // Replace # constants with valid JavaScript identifiers
+            Object.keys(constants).forEach(key => {
+                const constName = key.replace('#', 'const_');
+                prepared = prepared.replace(new RegExp('\\' + key, 'g'), constName);
+            });
+            
+            return prepared;
+        }
+        
+        // Set up math.js scope with all variables
+        function updateMathScope() {
+            // Clear existing scope
+            mathParser.clear();
+            
+            // Add measured values
+            Object.entries(measuredValues).forEach(([key, value]) => {
+                const varName = key.replace('$', 'var_');
+                mathParser.set(varName, value);
+            });
+            
+            // Add constants
+            Object.entries(constants).forEach(([key, value]) => {
+                const constName = key.replace('#', 'const_');
+                mathParser.set(constName, value);
+            });
+        }
 
         // Initialize Ace Editor
         let editor;
@@ -1331,11 +1374,11 @@
             // Simulate GraphQL request
             await new Promise(resolve => setTimeout(resolve, 300));
 
-            // Mock response based on formula validation
+            // Mock response based on formula validation using math.js
             const formula = query.variables.formula;
             const errors = [];
-
-            // Check for undefined variables
+            
+            // First check for undefined variables (before converting to math.js format)
             const variableMatches = formula.match(/[\$#][a-zA-Z_][a-zA-Z0-9_]*/g) || [];
             variableMatches.forEach((variable, index) => {
                 if (!measuredValues.hasOwnProperty(variable) && !constants.hasOwnProperty(variable)) {
@@ -1351,140 +1394,77 @@
                     });
                 }
             });
-
-            // Check for bare identifiers (not prefixed with $ or # and not functions)
-            // This regex finds identifiers that are NOT: preceded by $ or #, part of a number, or followed by (
-            const bareIdentifierRegex = /(?<![a-zA-Z0-9_$#])\b([a-zA-Z_][a-zA-Z0-9_]*)\b(?!\s*\()/g;
-            let match;
-            while ((match = bareIdentifierRegex.exec(formula)) !== null) {
-                const identifier = match[1];
-                // Skip if it's a known function (even without parentheses, which would be an error)
-                if (!functions.includes(identifier) && !['Math'].includes(identifier)) {
-                    errors.push({
-                        type: 'undefined_identifier',
-                        message: `Undefined identifier: ${identifier}`,
-                        position: {
-                            line: 1,
-                            column: match.index + 1,
-                            length: identifier.length
-                        },
-                        suggestion: (() => {
-                            // Special case for common typos
-                            if (identifier === 'mea' || identifier === 'measur') {
-                                return 'Variables must start with $. Did you mean "$measuredValue_1"?';
-                            }
-                            const suggestion = findClosestMatch(identifier, [
-                                ...Object.keys(measuredValues), 
-                                ...Object.keys(constants), 
-                                ...functions.map(f => f + '()')
-                            ]);
-                            return `Variables must start with $ or #. ${suggestion || ''}`;
-                        })()
-                    });
-                }
-            }
-
-            // Check for undefined functions
-            const functionMatches = formula.match(/\b[a-zA-Z_][a-zA-Z0-9_]*(?=\s*\()/g) || [];
-            functionMatches.forEach(func => {
-                if (!functions.includes(func) && func !== 'Math') {
-                    errors.push({
-                        type: 'undefined_function',
-                        message: `Undefined function: ${func}`,
-                        position: {
-                            line: 1,
-                            column: formula.indexOf(func) + 1,
-                            length: func.length
-                        },
-                        suggestion: findClosestMatch(func, functions)
-                    });
-                }
-            });
-
-            // Check for incomplete operations (trailing operators)
-            const incompleteOperatorRegex = /[+\-*/^%]\s*$/;
-            const operatorMatch = formula.match(incompleteOperatorRegex);
-            if (operatorMatch) {
-                const operator = operatorMatch[0].trim();
-                const operatorNames = {
-                    '+': 'addition',
-                    '-': 'subtraction',
-                    '*': 'multiplication',
-                    '/': 'division',
-                    '^': 'exponentiation',
-                    '%': 'modulo'
+            
+            // If we have undefined variables, don't try to parse with math.js
+            if (errors.length > 0) {
+                return {
+                    data: {
+                        spellcheckFormula: {
+                            isValid: false,
+                            errors: errors,
+                            warnings: []
+                        }
+                    }
                 };
-                const operatorName = operatorNames[operator] || 'operation';
+            }
+            
+            // Convert formula to math.js compatible format
+            const preparedFormula = prepareFormulaForMathJS(formula);
+            
+            // Try to parse with math.js to catch syntax errors
+            try {
+                updateMathScope();
+                const node = math.parse(preparedFormula);
+                
+                // If parsing succeeds, try to evaluate to catch runtime errors
+                try {
+                    mathParser.evaluate(preparedFormula);
+                } catch (evalError) {
+                    // Runtime error (like division by zero)
+                    errors.push({
+                        type: 'runtime_error',
+                        message: evalError.message,
+                        position: {
+                            line: 1,
+                            column: 1,
+                            length: formula.length
+                        }
+                    });
+                }
+            } catch (parseError) {
+                // Syntax error from math.js
+                let column = 1;
+                let message = parseError.message;
+                
+                // Try to extract position from error message
+                if (parseError.message.includes('char ')) {
+                    const match = parseError.message.match(/char (\d+)/);
+                    if (match) {
+                        column = parseInt(match[1]);
+                    }
+                }
+                
+                // Provide more user-friendly error messages
+                if (message.includes('Unexpected end of expression')) {
+                    message = 'Incomplete expression - missing value or operator';
+                } else if (message.includes('Value expected')) {
+                    message = 'Missing value after operator';
+                } else if (message.includes('Unexpected operator')) {
+                    message = 'Invalid operator placement';
+                }
+                
                 errors.push({
                     type: 'syntax_error',
-                    message: `Incomplete ${operatorName} operation`,
+                    message: message,
                     position: {
                         line: 1,
-                        column: formula.lastIndexOf(operator) + 1,
+                        column: column,
                         length: 1
                     },
-                    suggestion: `The ${operator} operator requires a value after it`
+                    suggestion: 'Check your formula syntax'
                 });
             }
 
-            // Check for invalid hash symbols (numbers after # or multiple #)
-            const invalidHashRegex = /(#{2,}[a-zA-Z_][a-zA-Z0-9_]*|#\d+)/g;
-            let hashMatch;
-            while ((hashMatch = invalidHashRegex.exec(formula)) !== null) {
-                let suggestion = 'Constants must start with a single # followed by a letter';
-                if (hashMatch[0].startsWith('##')) {
-                    suggestion = 'Constants must start with a single # symbol, not multiple';
-                } else if (/^#\d/.test(hashMatch[0])) {
-                    suggestion = 'Constants must start with # followed by a letter, not a number';
-                }
-                errors.push({
-                    type: 'syntax_error',
-                    message: `Invalid constant syntax: ${hashMatch[0]}`,
-                    position: {
-                        line: 1,
-                        column: hashMatch.index + 1,
-                        length: hashMatch[0].length
-                    },
-                    suggestion: suggestion
-                });
-            }
-
-            // Check for empty parentheses
-            const emptyParenRegex = /\(\s*\)/g;
-            let emptyParenMatch;
-            while ((emptyParenMatch = emptyParenRegex.exec(formula)) !== null) {
-                errors.push({
-                    type: 'syntax_error',
-                    message: 'Empty parentheses',
-                    position: {
-                        line: 1,
-                        column: emptyParenMatch.index + 1,
-                        length: emptyParenMatch[0].length
-                    },
-                    suggestion: 'Parentheses must contain an expression'
-                });
-            }
-
-            // Check for balanced parentheses
-            let parenCount = 0;
-            for (let i = 0; i < formula.length; i++) {
-                if (formula[i] === '(') parenCount++;
-                else if (formula[i] === ')') parenCount--;
-                if (parenCount < 0) {
-                    errors.push({
-                        type: 'syntax_error',
-                        message: 'Unmatched closing parenthesis',
-                        position: { line: 1, column: i + 1 }
-                    });
-                    break;
-                }
-            }
-            if (parenCount > 0) {
-                errors.push({
-                    type: 'syntax_error',
-                    message: 'Unmatched opening parenthesis'
-                });
-            }
 
             return {
                 data: {
@@ -1584,29 +1564,14 @@
             await new Promise(resolve => setTimeout(resolve, 500));
 
             try {
-                // Process formula
-                let processedFormula = formula;
+                // Convert formula to math.js compatible format
+                const preparedFormula = prepareFormulaForMathJS(formula);
                 
-                // Replace variables
-                Object.entries(measuredValues).forEach(([key, value]) => {
-                    processedFormula = processedFormula.replace(new RegExp('\\' + key, 'g'), value);
-                });
+                // Update scope with current values
+                updateMathScope();
                 
-                Object.entries(constants).forEach(([key, value]) => {
-                    processedFormula = processedFormula.replace(new RegExp('\\' + key, 'g'), value);
-                });
-
-                // Replace functions
-                functions.forEach(func => {
-                    processedFormula = processedFormula.replace(new RegExp(`\\b${func}\\(`, 'g'), `Math.${func}(`);
-                });
-
-                // Custom functions
-                processedFormula = processedFormula
-                    .replace(/\bavg\(([^)]+)\)/g, '(($1) / arguments.length)')
-                    .replace(/\bsum\(([^)]+)\)/g, '($1)');
-
-                const result = Function('"use strict"; return (' + processedFormula + ')')();
+                // Evaluate using math.js (safe and handles all edge cases)
+                const result = mathParser.evaluate(preparedFormula);
                 
                 return {
                     data: {
@@ -1890,6 +1855,7 @@
             }
             
             measuredValues[key] = value;
+            updateMathScope(); // Update math.js scope
             handleSourceChange(`Added variable: ${key} = ${value}`);
             cancelAddMeasured();
             renderSourceLists();
@@ -1911,6 +1877,7 @@
             }
             
             constants[key] = value;
+            updateMathScope(); // Update math.js scope
             handleSourceChange(`Added constant: ${key} = ${value}`);
             cancelAddConstant();
             renderSourceLists();
@@ -2063,6 +2030,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             initializeEditor();
             renderSourceLists();
+            updateMathScope(); // Initialize math.js scope with variables
             
             // Initial spellcheck
             setTimeout(performSpellcheck, 100);
