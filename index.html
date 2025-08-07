@@ -947,6 +947,9 @@
                             <button class="btn" onclick="clearEditor()">Clear</button>
                             <button class="btn" onclick="insertSample()">Insert Sample</button>
                             <button class="btn" onclick="simulateSourceChanges()" title="Test source changes">Simulate Change</button>
+                            <button class="btn" onclick="runTestSuite()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
+                                🧪 Run Test Suite
+                            </button>
                         </div>
                         <div id="editor"></div>
                     </div>
@@ -974,6 +977,45 @@
     <div class="graphql-status" id="graphqlStatus">
         <div class="spinner"></div>
         <span>GraphQL query in progress...</span>
+    </div>
+
+    <!-- Test Suite Modal -->
+    <div id="testSuiteModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7); z-index: 2000; backdrop-filter: blur(4px);">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--bg-card); border-radius: 16px; padding: 32px; width: 90%; max-width: 800px; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h2 style="margin: 0; color: var(--text-primary); font-size: 24px;">🧪 Edge Case Test Suite</h2>
+                <button onclick="closeTestSuite()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-secondary);">✕</button>
+            </div>
+            
+            <div id="testProgress" style="margin-bottom: 24px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span id="testStatus" style="color: var(--text-secondary); font-size: 14px;">Ready to start testing...</span>
+                    <span id="testCount" style="color: var(--text-secondary); font-size: 14px;">0/0</span>
+                </div>
+                <div style="background: var(--border-secondary); border-radius: 8px; height: 8px; overflow: hidden;">
+                    <div id="progressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #10b981 0%, #059669 100%); transition: width 0.3s ease;"></div>
+                </div>
+            </div>
+            
+            <div id="currentTest" style="background: var(--bg-tertiary); border-radius: 12px; padding: 20px; margin-bottom: 24px; min-height: 120px;">
+                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">Currently Testing:</div>
+                <div id="currentFormula" style="font-family: 'JetBrains Mono', monospace; font-size: 16px; color: var(--text-primary); margin-bottom: 12px;">-</div>
+                <div id="currentResult" style="font-size: 14px; color: var(--text-secondary);">-</div>
+            </div>
+            
+            <div id="testResults" style="max-height: 400px; overflow-y: auto;">
+                <div style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px;">Test Results:</div>
+                <div id="testResultsList"></div>
+            </div>
+            
+            <div style="margin-top: 24px; display: flex; gap: 12px; align-items: center;">
+                <button id="runTestsBtn" onclick="startTests()" class="btn primary" style="flex: 1;">Start Tests</button>
+                <button id="speedToggleBtn" onclick="toggleTestSpeed()" class="btn" style="padding: 8px 16px;" title="Toggle test speed">
+                    <span id="speedIcon">🐢</span> <span id="speedText">Normal</span>
+                </button>
+                <button onclick="closeTestSuite()" class="btn" style="flex: 1;">Close</button>
+            </div>
+        </div>
     </div>
 
     <div class="source-notification" id="sourceNotification">
@@ -2024,6 +2066,352 @@
                 editor.session.insert(cursor, variable);
                 editor.focus();
             }
+        }
+
+        // Test Suite functionality
+        const testCases = [
+            // Valid cases
+            { formula: '1 + 1', expectError: false, description: 'Basic addition' },
+            { formula: '$measuredValue_1 + $measuredValue2', expectError: false, description: 'Variable addition' },
+            { formula: '#constantsSqrtTwo * 2', expectError: false, description: 'Constant multiplication' },
+            { formula: 'sqrt(16)', expectError: false, description: 'Function call' },
+            { formula: '(2 + 3) * 4', expectError: false, description: 'Parentheses grouping' },
+            
+            // Edge cases - should fail
+            { formula: '1 2', expectError: true, description: 'Missing operator between numbers' },
+            { formula: '$measuredValue_1 $measuredValue2', expectError: true, description: 'Missing operator between variables' },
+            { formula: '*', expectError: true, description: 'Standalone multiplication operator' },
+            { formula: '/', expectError: true, description: 'Standalone division operator' },
+            { formula: '+', expectError: true, description: 'Standalone addition operator' },
+            { formula: '-', expectError: true, description: 'Standalone subtraction operator' },
+            { formula: '1 +', expectError: true, description: 'Trailing addition operator' },
+            { formula: '2 *', expectError: true, description: 'Trailing multiplication operator' },
+            { formula: '3 /', expectError: true, description: 'Trailing division operator' },
+            { formula: '4 -', expectError: true, description: 'Trailing subtraction operator' },
+            { formula: '$measuredValue_1 *', expectError: true, description: 'Trailing operator after variable' },
+            { formula: '#constantsSqrtTwo /', expectError: true, description: 'Trailing operator after constant' },
+            { formula: '()', expectError: true, description: 'Empty parentheses' },
+            { formula: '( )', expectError: true, description: 'Empty parentheses with space' },
+            { formula: '(1 + 2', expectError: true, description: 'Unmatched opening parenthesis' },
+            { formula: '1 + 2)', expectError: true, description: 'Unmatched closing parenthesis' },
+            { formula: '((1 + 2)', expectError: true, description: 'Multiple unmatched opening parentheses' },
+            { formula: '(1 + 2))', expectError: true, description: 'Multiple unmatched closing parentheses' },
+            { formula: 'just text', expectError: true, description: 'Invalid identifier without prefix' },
+            { formula: '$unknownVariable', expectError: true, description: 'Undefined variable' },
+            { formula: '#unknownConstant', expectError: true, description: 'Undefined constant' },
+            { formula: 'unknownFunc()', expectError: true, description: 'Undefined function' },
+            { formula: '1..2', expectError: true, description: 'Invalid decimal notation' },
+            { formula: '1.2.3', expectError: true, description: 'Multiple decimal points' },
+            { formula: '++1', expectError: true, description: 'Double operators' },
+            { formula: '1++2', expectError: true, description: 'Double operators in middle' },
+            { formula: '1 * / 2', expectError: true, description: 'Adjacent operators' },
+            { formula: '* 5', expectError: true, description: 'Leading multiplication operator' },
+            { formula: '/ 10', expectError: true, description: 'Leading division operator' },
+            { formula: '+ 3', expectError: true, description: 'Leading addition operator' },
+            { formula: '() + 5', expectError: true, description: 'Empty parentheses in expression' },
+            { formula: '5 + ()', expectError: true, description: 'Empty parentheses at end' },
+            { formula: 'sqrt()', expectError: true, description: 'Function with no arguments' },
+            { formula: 'sqrt', expectError: true, description: 'Function without parentheses' },
+            { formula: '(1 + ) * 2', expectError: true, description: 'Missing value in parentheses' },
+            { formula: '1 + + 2', expectError: true, description: 'Double addition operators' },
+            { formula: '2 * * 3', expectError: true, description: 'Double multiplication operators' },
+            { formula: '3 / / 4', expectError: true, description: 'Double division operators' },
+            { formula: '---5', expectError: true, description: 'Triple negation' },
+            { formula: '$', expectError: true, description: 'Standalone $ symbol' },
+            { formula: '#', expectError: true, description: 'Standalone # symbol' },
+            { formula: '##constantsSqrtTwo', expectError: true, description: 'Double hash prefix' },
+            { formula: '$$measuredValue_1', expectError: true, description: 'Double dollar prefix' },
+            { formula: '#123', expectError: true, description: 'Hash followed by number' },
+            { formula: '$456', expectError: true, description: 'Dollar followed by only numbers' },
+            { formula: '1 2 3', expectError: true, description: 'Multiple numbers without operators' },
+            { formula: '(1 2)', expectError: true, description: 'Missing operator in parentheses' },
+            { formula: 'sin(cos(tan()))', expectError: true, description: 'Nested function with empty inner' },
+            { formula: '1 + 2 + ', expectError: true, description: 'Complex expression with trailing operator' },
+            { formula: '* $measuredValue_1', expectError: true, description: 'Leading operator before variable' },
+            { formula: '/ #constantsSqrtTwo', expectError: true, description: 'Leading operator before constant' }
+        ];
+        
+        let currentTestIndex = 0;
+        let testResults = [];
+        let isTestRunning = false;
+        let testSpeed = 'instant'; // 'normal', 'fast', 'instant'
+        let testDelays = {
+            normal: { wait: 500, next: 1500 },
+            fast: { wait: 100, next: 300 },
+            instant: { wait: 0, next: 50 }
+        };
+        
+        function runTestSuite() {
+            document.getElementById('testSuiteModal').style.display = 'block';
+            resetTestSuite();
+        }
+        
+        function closeTestSuite() {
+            document.getElementById('testSuiteModal').style.display = 'none';
+            isTestRunning = false;
+        }
+        
+        function resetTestSuite() {
+            currentTestIndex = 0;
+            testResults = [];
+            isTestRunning = false;
+            document.getElementById('progressBar').style.width = '0%';
+            document.getElementById('testStatus').textContent = 'Ready to start testing...';
+            document.getElementById('testCount').textContent = `0/${testCases.length}`;
+            document.getElementById('currentFormula').textContent = '-';
+            document.getElementById('currentResult').textContent = '-';
+            document.getElementById('testResultsList').innerHTML = '';
+            document.getElementById('runTestsBtn').textContent = 'Start Tests';
+            document.getElementById('runTestsBtn').disabled = false;
+            // Set initial speed display to instant
+            document.getElementById('speedIcon').textContent = '⚡';
+            document.getElementById('speedText').textContent = 'Instant';
+        }
+        
+        async function startTests() {
+            if (isTestRunning) return;
+            
+            isTestRunning = true;
+            currentTestIndex = 0;
+            testResults = [];
+            document.getElementById('testResultsList').innerHTML = '';
+            document.getElementById('runTestsBtn').textContent = 'Testing...';
+            document.getElementById('runTestsBtn').disabled = true;
+            
+            await runNextTest();
+        }
+        
+        async function runNextTest() {
+            if (!isTestRunning || currentTestIndex >= testCases.length) {
+                finishTests();
+                return;
+            }
+            
+            const testCase = testCases[currentTestIndex];
+            const progress = ((currentTestIndex + 1) / testCases.length) * 100;
+            const delays = testDelays[testSpeed];
+            
+            // Update UI
+            document.getElementById('progressBar').style.width = `${progress}%`;
+            document.getElementById('testStatus').textContent = `Testing: ${testCase.description}`;
+            document.getElementById('testCount').textContent = `${currentTestIndex + 1}/${testCases.length}`;
+            document.getElementById('currentFormula').textContent = testCase.formula;
+            
+            // Set the formula in editor for visual feedback
+            editor.setValue(testCase.formula, -1);
+            
+            // Wait a bit for visual effect (based on speed setting)
+            await new Promise(resolve => setTimeout(resolve, delays.wait));
+            
+            // Run validation
+            const validationResult = await validateFormula(testCase.formula);
+            
+            // Determine if test passed
+            const hasError = validationResult.errors.length > 0;
+            const testPassed = (testCase.expectError && hasError) || (!testCase.expectError && !hasError);
+            
+            // Store result
+            const result = {
+                formula: testCase.formula,
+                description: testCase.description,
+                expectError: testCase.expectError,
+                actualError: hasError,
+                passed: testPassed,
+                errorMessage: hasError ? validationResult.errors[0].message : null
+            };
+            testResults.push(result);
+            
+            // Update current test display
+            if (testPassed) {
+                document.getElementById('currentResult').innerHTML = `<span style="color: var(--accent-success);">✓ PASS</span> ${hasError ? `- Error detected as expected: "${result.errorMessage}"` : '- No errors, formula is valid'}`;
+            } else {
+                document.getElementById('currentResult').innerHTML = `<span style="color: var(--accent-error);">✗ FAIL</span> ${hasError ? `- Unexpected error: "${result.errorMessage}"` : '- Expected error but formula was valid'}`;
+            }
+            
+            // Add to results list
+            addTestResult(result);
+            
+            // Continue to next test (based on speed setting)
+            currentTestIndex++;
+            setTimeout(() => runNextTest(), delays.next);
+        }
+        
+        function toggleTestSpeed() {
+            if (testSpeed === 'instant') {
+                testSpeed = 'normal';
+                document.getElementById('speedIcon').textContent = '🐢';
+                document.getElementById('speedText').textContent = 'Normal';
+            } else if (testSpeed === 'normal') {
+                testSpeed = 'fast';
+                document.getElementById('speedIcon').textContent = '🐇';
+                document.getElementById('speedText').textContent = 'Fast';
+            } else {
+                testSpeed = 'instant';
+                document.getElementById('speedIcon').textContent = '⚡';
+                document.getElementById('speedText').textContent = 'Instant';
+            }
+        }
+        
+        async function validateFormula(formula) {
+            const errors = [];
+            
+            // First check for specific patterns that math.js might accept but we want to reject
+            
+            // Check for double operators like ++, --, **, //, and also with spaces like + +, * *, / /
+            if (/\+\s*\+|\-\s*\-(?!\d)|\*\s*\*|\/\s*\//.test(formula)) {
+                errors.push({
+                    type: 'syntax_error',
+                    message: 'Double operators are not allowed'
+                });
+                return { errors };
+            }
+            
+            // Check for leading + (math.js accepts +3 as valid)
+            if (/^\s*\+\s*\d/.test(formula)) {
+                errors.push({
+                    type: 'syntax_error',
+                    message: 'Leading + operator is not allowed'
+                });
+                return { errors };
+            }
+            
+            // Check for triple or more negation
+            if (/---+/.test(formula)) {
+                errors.push({
+                    type: 'syntax_error',
+                    message: 'Multiple consecutive negation operators are not allowed'
+                });
+                return { errors };
+            }
+            
+            // Check for standalone # or ##
+            if (/(?:^|[^a-zA-Z0-9_])#(?:#|(?![a-zA-Z_]))/.test(formula)) {
+                errors.push({
+                    type: 'syntax_error',
+                    message: 'Invalid use of # symbol'
+                });
+                return { errors };
+            }
+            
+            // Check for $measuredValue_1 $measuredValue2 (missing operator between variables)
+            if (/\$[a-zA-Z_][a-zA-Z0-9_]*\s+\$[a-zA-Z_][a-zA-Z0-9_]*/.test(formula)) {
+                errors.push({
+                    type: 'syntax_error',
+                    message: 'Missing operator between variables'
+                });
+                return { errors };
+            }
+            
+            // Check for undefined variables
+            const variableMatches = formula.match(/[\$#][a-zA-Z_][a-zA-Z0-9_]*/g) || [];
+            variableMatches.forEach(variable => {
+                if (!measuredValues.hasOwnProperty(variable) && !constants.hasOwnProperty(variable)) {
+                    errors.push({
+                        type: 'undefined_variable',
+                        message: `Undefined variable: ${variable}`
+                    });
+                }
+            });
+            
+            // Check for bare identifiers (text without $ or # that aren't functions)
+            const bareIdentifierRegex = /(?<![a-zA-Z0-9_$#])\b([a-zA-Z_][a-zA-Z0-9_]*)\b(?!\s*\()/g;
+            let match;
+            while ((match = bareIdentifierRegex.exec(formula)) !== null) {
+                const identifier = match[1];
+                // Check if it's not a known function or Math
+                if (!functions.includes(identifier) && identifier !== 'Math') {
+                    // Special check: if it's a function name without parentheses
+                    if (functions.includes(identifier)) {
+                        errors.push({
+                            type: 'syntax_error',
+                            message: `Function ${identifier} requires parentheses`
+                        });
+                    } else if (!errors.some(e => e.message.includes(identifier))) {
+                        errors.push({
+                            type: 'undefined_identifier',
+                            message: `Undefined identifier: ${identifier}. Variables must start with $ or #`
+                        });
+                    }
+                }
+            }
+            
+            // Check for functions without parentheses
+            functions.forEach(func => {
+                const regex = new RegExp(`\\b${func}\\b(?!\\s*\\()`, 'g');
+                if (regex.test(formula)) {
+                    errors.push({
+                        type: 'syntax_error',
+                        message: `Function ${func} requires parentheses`
+                    });
+                }
+            });
+            
+            if (errors.length === 0) {
+                // Try to parse with math.js
+                try {
+                    const preparedFormula = prepareFormulaForMathJS(formula);
+                    updateMathScope();
+                    math.parse(preparedFormula);
+                    mathParser.evaluate(preparedFormula);
+                } catch (error) {
+                    errors.push({
+                        type: 'syntax_error',
+                        message: error.message
+                    });
+                }
+            }
+            
+            return { errors };
+        }
+        
+        function addTestResult(result) {
+            const resultItem = document.createElement('div');
+            resultItem.style.cssText = `
+                background: ${result.passed ? 'rgba(16, 185, 129, 0.1)' : 'rgba(220, 38, 38, 0.1)'};
+                border: 1px solid ${result.passed ? 'var(--accent-success)' : 'var(--accent-error)'};
+                border-radius: 8px;
+                padding: 12px;
+                margin-bottom: 8px;
+            `;
+            
+            resultItem.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <div style="flex: 1;">
+                        <div style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">
+                            ${result.formula}
+                        </div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">
+                            ${result.description}
+                        </div>
+                        ${result.errorMessage ? `<div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Error: ${result.errorMessage}</div>` : ''}
+                    </div>
+                    <div style="font-size: 14px; font-weight: 600; color: ${result.passed ? 'var(--accent-success)' : 'var(--accent-error)'};">
+                        ${result.passed ? '✓ PASS' : '✗ FAIL'}
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('testResultsList').appendChild(resultItem);
+        }
+        
+        function finishTests() {
+            isTestRunning = false;
+            const passedCount = testResults.filter(r => r.passed).length;
+            const failedCount = testResults.filter(r => !r.passed).length;
+            const passRate = (passedCount / testCases.length * 100).toFixed(1);
+            
+            document.getElementById('testStatus').innerHTML = `
+                <span style="color: ${failedCount === 0 ? 'var(--accent-success)' : 'var(--accent-warning)'};">
+                    Testing Complete! Passed: ${passedCount}/${testCases.length} (${passRate}%)
+                </span>
+            `;
+            document.getElementById('currentFormula').textContent = 'All tests completed';
+            document.getElementById('currentResult').innerHTML = `
+                <span style="color: var(--accent-success);">✓ Passed: ${passedCount}</span> | 
+                <span style="color: var(--accent-error);">✗ Failed: ${failedCount}</span>
+            `;
+            document.getElementById('runTestsBtn').textContent = 'Run Again';
+            document.getElementById('runTestsBtn').disabled = false;
         }
 
         // Initialize the application
