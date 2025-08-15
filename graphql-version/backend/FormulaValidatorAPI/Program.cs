@@ -33,4 +33,8 @@ app.MapGraphQL();
 
 // GraphQL Playground is available at /graphql in development mode by default
 
+// Get port from environment variable (for Render)
+var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
+app.Urls.Add($"http://+:{port}");
+
 app.Run();
