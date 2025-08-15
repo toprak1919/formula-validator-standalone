@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend vs Backend Validator Comparison Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .description {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50 0%, #45a049 100%);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .results-table th {
+            background: #f0f0f0;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #ddd;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .results-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+        }
+
+        .results-table tbody tr:hover {
+            background: #f9f9f9;
+        }
+
+        .match {
+            background: #d4edda;
+            color: #155724;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .mismatch {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .error-text {
+            color: #dc3545;
+            font-size: 12px;
+        }
+
+        .success-text {
+            color: #28a745;
+            font-size: 12px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .filter-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+
+        .filter-options {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .filter-option {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .results-container {
+            max-height: 600px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .summary-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .summary-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .summary-item {
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .formula-code {
+            font-family: 'Courier New', monospace;
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔬 Validator Comparison Test Suite</h1>
+        <p class="description">
+            This tool compares formula validation results between the frontend (JavaScript) and backend (.NET) validators to identify any discrepancies.
+        </p>
+
+        <div class="controls">
+            <button class="btn-primary" onclick="runAllTests()">
+                Run All Tests
+            </button>
+            <button class="btn-secondary" onclick="runMismatchesOnly()">
+                Re-test Mismatches
+            </button>
+            <button class="btn-secondary" onclick="exportResults()">
+                Export Results
+            </button>
+            <button class="btn-secondary" onclick="clearResults()">
+                Clear Results
+            </button>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="totalTests">0</div>
+                <div class="stat-label">Total Tests</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="matchCount" style="color: #28a745;">0</div>
+                <div class="stat-label">Matching Results</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="mismatchCount" style="color: #dc3545;">0</div>
+                <div class="stat-label">Mismatches</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="matchRate">0%</div>
+                <div class="stat-label">Match Rate</div>
+            </div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressBar" style="width: 0%">0%</div>
+        </div>
+
+        <div id="summaryCard" class="summary-card" style="display: none;">
+            <div class="summary-title">⚠️ Discrepancy Summary</div>
+            <div class="summary-content" id="summaryContent"></div>
+        </div>
+
+        <div class="filter-section">
+            <div class="filter-options">
+                <div class="filter-option">
+                    <input type="checkbox" id="showMatches" checked onchange="filterResults()">
+                    <label for="showMatches">Show Matches</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="showMismatches" checked onchange="filterResults()">
+                    <label for="showMismatches">Show Mismatches</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="showErrors" checked onchange="filterResults()">
+                    <label for="showErrors">Show Errors</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="results-container">
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Formula</th>
+                        <th>Description</th>
+                        <th>Frontend Result</th>
+                        <th>Backend Result</th>
+                        <th>Match Status</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Test cases - comprehensive list
+        const testCases = [
+            // Valid formulas
+            { formula: '1 + 1', expectError: false, description: 'Basic addition' },
+            { formula: '5 - 3', expectError: false, description: 'Basic subtraction' },
+            { formula: '4 * 2', expectError: false, description: 'Basic multiplication' },
+            { formula: '10 / 2', expectError: false, description: 'Basic division' },
+            { formula: '2 ^ 3', expectError: false, description: 'Exponentiation' },
+            { formula: '10 % 3', expectError: false, description: 'Modulo operation' },
+            { formula: '$measuredValue_1 + $measuredValue_2', expectError: false, description: 'Variable addition' },
+            { formula: '#constantsPi * 2', expectError: false, description: 'Constant multiplication' },
+            { formula: '(2 + 3) * 4', expectError: false, description: 'Parentheses grouping' },
+            { formula: '((1 + 2) * 3) / 4', expectError: false, description: 'Nested parentheses' },
+            { formula: '-5', expectError: false, description: 'Negative number' },
+            { formula: '-$measuredValue_1', expectError: false, description: 'Negative variable' },
+            { formula: '3.14159', expectError: false, description: 'Decimal number' },
+            { formula: '1.5 + 2.5', expectError: false, description: 'Decimal addition' },
+            
+            // Invalid formulas - syntax errors
+            { formula: '1 2', expectError: true, description: 'Missing operator between numbers' },
+            { formula: '$measuredValue_1 $measuredValue_2', expectError: true, description: 'Missing operator between variables' },
+            { formula: '*', expectError: true, description: 'Standalone multiplication' },
+            { formula: '/', expectError: true, description: 'Standalone division' },
+            { formula: '+', expectError: true, description: 'Standalone addition' },
+            { formula: '1 +', expectError: true, description: 'Trailing addition' },
+            { formula: '2 *', expectError: true, description: 'Trailing multiplication' },
+            { formula: '3 /', expectError: true, description: 'Trailing division' },
+            { formula: '4 -', expectError: true, description: 'Trailing subtraction' },
+            { formula: '5 ^', expectError: true, description: 'Trailing exponentiation' },
+            { formula: '6 %', expectError: true, description: 'Trailing modulo' },
+            { formula: '()', expectError: true, description: 'Empty parentheses' },
+            { formula: '( )', expectError: true, description: 'Empty parentheses with space' },
+            { formula: '(1 + 2', expectError: true, description: 'Unmatched opening parenthesis' },
+            { formula: '1 + 2)', expectError: true, description: 'Unmatched closing parenthesis' },
+            { formula: '((1 + 2)', expectError: true, description: 'Multiple unmatched opening' },
+            { formula: '(1 + 2))', expectError: true, description: 'Multiple unmatched closing' },
+            
+            // Invalid formulas - operator errors
+            { formula: '++1', expectError: true, description: 'Double plus operators' },
+            { formula: '1++2', expectError: true, description: 'Double plus in middle' },
+            { formula: '1 * / 2', expectError: true, description: 'Adjacent operators' },
+            { formula: '* 5', expectError: true, description: 'Leading multiplication' },
+            { formula: '/ 10', expectError: true, description: 'Leading division' },
+            { formula: '+ 3', expectError: true, description: 'Leading addition' },
+            { formula: '^ 2', expectError: true, description: 'Leading exponentiation' },
+            { formula: '% 5', expectError: true, description: 'Leading modulo' },
+            { formula: '1 + + 2', expectError: true, description: 'Double addition with space' },
+            { formula: '2 * * 3', expectError: true, description: 'Double multiplication with space' },
+            { formula: '3 / / 4', expectError: true, description: 'Double division with space' },
+            { formula: '---5', expectError: true, description: 'Triple negation' },
+            
+            // Invalid formulas - variable/constant errors
+            { formula: '$', expectError: true, description: 'Standalone dollar' },
+            { formula: '#', expectError: true, description: 'Standalone hash' },
+            { formula: '$$measuredValue', expectError: true, description: 'Double dollar' },
+            { formula: '##constant', expectError: true, description: 'Double hash' },
+            { formula: '$123', expectError: true, description: 'Dollar with only numbers' },
+            { formula: '#456', expectError: true, description: 'Hash with only numbers' },
+            { formula: '$unknownVariable', expectError: true, description: 'Undefined variable' },
+            { formula: '#unknownConstant', expectError: true, description: 'Undefined constant' },
+            
+            // Edge cases
+            { formula: '0 / 0', expectError: false, description: 'Division by zero' },
+            { formula: '1 / 0', expectError: false, description: 'Infinity case' },
+            { formula: '0', expectError: false, description: 'Single zero' },
+            { formula: '1', expectError: false, description: 'Single digit' },
+            { formula: ' 1 + 1 ', expectError: false, description: 'Formula with spaces' },
+            { formula: '1+1', expectError: false, description: 'No spaces' },
+            { formula: '(1)', expectError: false, description: 'Single number in parentheses' },
+            { formula: '((1))', expectError: false, description: 'Nested single number' },
+            { formula: '1.', expectError: true, description: 'Trailing decimal point' },
+            { formula: '.5', expectError: true, description: 'Leading decimal point' },
+            { formula: '1..2', expectError: true, description: 'Double decimal point' },
+            { formula: '1.2.3', expectError: true, description: 'Multiple decimal points' },
+            
+            // Function calls (if supported)
+            { formula: 'sqrt(16)', expectError: true, description: 'Square root function' },
+            { formula: 'sin(0)', expectError: true, description: 'Sine function' },
+            { formula: 'cos(0)', expectError: true, description: 'Cosine function' },
+            { formula: 'unknownFunc()', expectError: true, description: 'Unknown function' },
+            { formula: 'sqrt', expectError: true, description: 'Function without parentheses' },
+            { formula: 'sqrt()', expectError: true, description: 'Function without arguments' }
+        ];
+
+        let testResults = [];
+        let currentTestIndex = 0;
+
+        // Sample data for variables and constants
+        const measuredValues = {
+            '$measuredValue_1': 10,
+            '$measuredValue_2': 20,
+            '$measuredValue_3': 30
+        };
+
+        const constants = {
+            '#constantsPi': 3.14159,
+            '#constantsE': 2.71828,
+            '#constantsSqrtTwo': 1.41421
+        };
+
+        async function runAllTests() {
+            testResults = [];
+            currentTestIndex = 0;
+            document.getElementById('resultsBody').innerHTML = '';
+            updateStats();
+            
+            for (let i = 0; i < testCases.length; i++) {
+                currentTestIndex = i;
+                updateProgress();
+                
+                const testCase = testCases[i];
+                const result = await runSingleTest(testCase, i);
+                testResults.push(result);
+                displayResult(result, i);
+                updateStats();
+                
+                // Small delay to show progress
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+            
+            showSummary();
+        }
+
+        async function runSingleTest(testCase, index) {
+            const frontendResult = validateFrontend(testCase.formula);
+            const backendResult = await validateBackend(testCase.formula);
+            
+            const matches = compareResults(frontendResult, backendResult);
+            
+            return {
+                index: index + 1,
+                formula: testCase.formula,
+                description: testCase.description,
+                expectError: testCase.expectError,
+                frontend: frontendResult,
+                backend: backendResult,
+                matches: matches
+            };
+        }
+
+        function validateFrontend(formula) {
+            try {
+                // Basic validation checks (simplified version)
+                if (!formula || formula.trim() === '') {
+                    return { isValid: false, error: 'Formula cannot be empty' };
+                }
+
+                // Check for missing operators
+                if (/\d+\s+\d+/.test(formula)) {
+                    return { isValid: false, error: 'Missing operator between numbers' };
+                }
+
+                if (/\$[a-zA-Z_][a-zA-Z0-9_]*\s+\$[a-zA-Z_][a-zA-Z0-9_]*/.test(formula)) {
+                    return { isValid: false, error: 'Missing operator between variables' };
+                }
+
+                // Check for double operators
+                if (/[\+\-\*/\^%]{2,}/.test(formula)) {
+                    return { isValid: false, error: 'Invalid double operators' };
+                }
+
+                // Check for leading operators (except minus)
+                if (/^\s*[\+\*/\^%]/.test(formula)) {
+                    return { isValid: false, error: 'Formula cannot start with an operator' };
+                }
+
+                // Check for trailing operators
+                if (/[\+\-\*/\^%]\s*$/.test(formula)) {
+                    return { isValid: false, error: 'Incomplete operation - formula ends with an operator' };
+                }
+
+                // Check for empty parentheses
+                if (/\(\s*\)/.test(formula)) {
+                    return { isValid: false, error: 'Empty parentheses are not allowed' };
+                }
+
+                // Check parentheses balance
+                const openCount = (formula.match(/\(/g) || []).length;
+                const closeCount = (formula.match(/\)/g) || []).length;
+                if (openCount !== closeCount) {
+                    return { isValid: false, error: openCount > closeCount ? 'Unmatched opening parenthesis' : 'Unmatched closing parenthesis' };
+                }
+
+                // Check for invalid variable/constant syntax
+                if (/\$\$|\$\d+$|\$\s*$/.test(formula)) {
+                    return { isValid: false, error: 'Invalid variable syntax' };
+                }
+
+                if (/##|#\d|#\s*$/.test(formula)) {
+                    return { isValid: false, error: 'Invalid constant syntax' };
+                }
+
+                // Check for undefined variables
+                const variableMatches = formula.match(/\$[a-zA-Z_][a-zA-Z0-9_]*/g) || [];
+                for (const variable of variableMatches) {
+                    if (!measuredValues[variable]) {
+                        return { isValid: false, error: `Undefined variable: ${variable}` };
+                    }
+                }
+
+                // Check for undefined constants
+                const constantMatches = formula.match(/#[a-zA-Z_][a-zA-Z0-9_]*/g) || [];
+                for (const constant of constantMatches) {
+                    if (!constants[constant]) {
+                        return { isValid: false, error: `Undefined constant: ${constant}` };
+                    }
+                }
+
+                // Check for functions (not supported)
+                if (/[a-zA-Z_][a-zA-Z0-9_]*\s*\(/.test(formula)) {
+                    const funcMatch = formula.match(/([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/);
+                    return { isValid: false, error: `Undefined function: ${funcMatch[1]}` };
+                }
+
+                // Check for invalid decimal notation
+                if (/\d+\.\./.test(formula) || /\.\d+\./.test(formula)) {
+                    return { isValid: false, error: 'Invalid decimal notation' };
+                }
+
+                if (/\.$/.test(formula) || /^\s*\./.test(formula)) {
+                    return { isValid: false, error: 'Invalid decimal point placement' };
+                }
+
+                return { isValid: true, error: null };
+            } catch (e) {
+                return { isValid: false, error: `Frontend error: ${e.message}` };
+            }
+        }
+
+        async function validateBackend(formula) {
+            try {
+                const requestData = {
+                    formula: formula,
+                    measuredValues: Object.entries(measuredValues).map(([id, value]) => ({
+                        id: id.replace('$', ''),
+                        name: id,
+                        value: value
+                    })),
+                    constants: Object.entries(constants).map(([id, value]) => ({
+                        id: id.replace('#', ''),
+                        name: id,
+                        value: value
+                    }))
+                };
+
+                const response = await fetch('http://localhost:5232/graphql', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: `
+                            mutation ValidateFormula($request: ValidationRequestInput!) {
+                                validateFormula(request: $request) {
+                                    isValid
+                                    error
+                                }
+                            }
+                        `,
+                        variables: { request: requestData }
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.errors) {
+                    return { isValid: false, error: 'Backend GraphQL error' };
+                }
+
+                const result = data.data.validateFormula;
+                return { isValid: result.isValid, error: result.error };
+            } catch (e) {
+                return { isValid: false, error: 'Backend connection failed' };
+            }
+        }
+
+        function compareResults(frontend, backend) {
+            // Check if both have same validity status
+            if (frontend.isValid !== backend.isValid) {
+                return false;
+            }
+
+            // If both are invalid, check if error messages are similar
+            if (!frontend.isValid && !backend.isValid) {
+                // We'll consider them matching if both detected an error, even if messages differ slightly
+                return true; // You can make this stricter by comparing error messages
+            }
+
+            return true;
+        }
+
+        function displayResult(result, index) {
+            const row = document.createElement('tr');
+            row.className = result.matches ? 'match-row' : 'mismatch-row';
+            
+            row.innerHTML = `
+                <td>${result.index}</td>
+                <td><span class="formula-code">${escapeHtml(result.formula)}</span></td>
+                <td>${result.description}</td>
+                <td>${result.frontend.isValid 
+                    ? '<span class="success-text">Valid</span>' 
+                    : `<span class="error-text">${result.frontend.error || 'Invalid'}</span>`}</td>
+                <td>${result.backend.isValid 
+                    ? '<span class="success-text">Valid</span>' 
+                    : `<span class="error-text">${result.backend.error || 'Invalid'}</span>`}</td>
+                <td>${result.matches 
+                    ? '<span class="match">✓ Match</span>' 
+                    : '<span class="mismatch">✗ Mismatch</span>'}</td>
+            `;
+            
+            document.getElementById('resultsBody').appendChild(row);
+        }
+
+        function updateStats() {
+            const total = testResults.length;
+            const matches = testResults.filter(r => r.matches).length;
+            const mismatches = total - matches;
+            const rate = total > 0 ? ((matches / total) * 100).toFixed(1) : 0;
+            
+            document.getElementById('totalTests').textContent = total;
+            document.getElementById('matchCount').textContent = matches;
+            document.getElementById('mismatchCount').textContent = mismatches;
+            document.getElementById('matchRate').textContent = rate + '%';
+        }
+
+        function updateProgress() {
+            const progress = ((currentTestIndex + 1) / testCases.length) * 100;
+            const progressBar = document.getElementById('progressBar');
+            progressBar.style.width = progress + '%';
+            progressBar.textContent = Math.round(progress) + '%';
+        }
+
+        function showSummary() {
+            const mismatches = testResults.filter(r => !r.matches);
+            if (mismatches.length > 0) {
+                document.getElementById('summaryCard').style.display = 'block';
+                const summaryContent = document.getElementById('summaryContent');
+                
+                // Group mismatches by type
+                const mismatchTypes = {};
+                mismatches.forEach(m => {
+                    const key = `${m.frontend.isValid ? 'Valid' : 'Invalid'} → ${m.backend.isValid ? 'Valid' : 'Invalid'}`;
+                    if (!mismatchTypes[key]) {
+                        mismatchTypes[key] = [];
+                    }
+                    mismatchTypes[key].push(m);
+                });
+
+                summaryContent.innerHTML = Object.entries(mismatchTypes).map(([type, items]) => `
+                    <div class="summary-item">
+                        <strong>${type}</strong>: ${items.length} case(s)<br>
+                        <small>Examples: ${items.slice(0, 2).map(i => `"${i.formula}"`).join(', ')}</small>
+                    </div>
+                `).join('');
+            } else {
+                document.getElementById('summaryCard').style.display = 'none';
+            }
+        }
+
+        function filterResults() {
+            const showMatches = document.getElementById('showMatches').checked;
+            const showMismatches = document.getElementById('showMismatches').checked;
+            const rows = document.querySelectorAll('#resultsBody tr');
+            
+            rows.forEach(row => {
+                const isMatch = row.className === 'match-row';
+                if ((isMatch && showMatches) || (!isMatch && showMismatches)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        async function runMismatchesOnly() {
+            const mismatches = testResults.filter(r => !r.matches);
+            if (mismatches.length === 0) {
+                alert('No mismatches to re-test!');
+                return;
+            }
+
+            testResults = [];
+            currentTestIndex = 0;
+            document.getElementById('resultsBody').innerHTML = '';
+            
+            for (let i = 0; i < mismatches.length; i++) {
+                currentTestIndex = i;
+                const testCase = testCases.find(tc => tc.formula === mismatches[i].formula);
+                const result = await runSingleTest(testCase, i);
+                testResults.push(result);
+                displayResult(result, i);
+                updateStats();
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+            
+            showSummary();
+        }
+
+        function exportResults() {
+            const csv = [
+                ['Index', 'Formula', 'Description', 'Frontend Valid', 'Frontend Error', 'Backend Valid', 'Backend Error', 'Match'].join(','),
+                ...testResults.map(r => [
+                    r.index,
+                    `"${r.formula}"`,
+                    `"${r.description}"`,
+                    r.frontend.isValid,
+                    `"${r.frontend.error || ''}"`,
+                    r.backend.isValid,
+                    `"${r.backend.error || ''}"`,
+                    r.matches
+                ].join(','))
+            ].join('\n');
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `validator-comparison-${new Date().toISOString()}.csv`;
+            a.click();
+        }
+
+        function clearResults() {
+            testResults = [];
+            currentTestIndex = 0;
+            document.getElementById('resultsBody').innerHTML = '';
+            document.getElementById('summaryCard').style.display = 'none';
+            updateStats();
+            document.getElementById('progressBar').style.width = '0%';
+            document.getElementById('progressBar').textContent = '0%';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

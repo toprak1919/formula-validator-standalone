@@ -1,0 +1,6 @@
+@FormulaValidatorAPI_HostAddress = http://localhost:5232
+
+GET {{FormulaValidatorAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
