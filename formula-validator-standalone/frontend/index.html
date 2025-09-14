@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formula Editor with Backend Validation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="config.js"></script>
+    <style>
+        :root {
+            /* Bright Green Theme - Easy on Eyes */
+            --bg-primary: #f0fdf4;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #ecfdf5;
+            --bg-card: rgba(255, 255, 255, 0.98);
+            --bg-glass: rgba(240, 253, 244, 0.85);
+            --bg-glass-hover: rgba(220, 252, 231, 0.9);
+            
+            --text-primary: #064e3b;
+            --text-secondary: #047857;
+            --text-muted: #059669;
+            
+            --border-primary: rgba(16, 185, 129, 0.2);
+            --border-secondary: rgba(16, 185, 129, 0.1);
+            --border-focus: rgba(16, 185, 129, 0.5);
+            
+            --accent-primary: #10b981;
+            --accent-secondary: #059669;
+            --accent-tertiary: #047857;
+            --accent-warning: #f59e0b;
+            --accent-error: #dc2626;
+            --accent-success: #10b981;
+            
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px rgba(16, 185, 129, 0.1);
+            --shadow-lg: 0 10px 15px rgba(16, 185, 129, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            background-image: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #d1fae5 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: var(--bg-card);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-primary);
+            animation: fadeIn 0.6s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 24px 32px;
+            border-bottom: 1px solid var(--border-primary);
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 300px 1fr 350px;
+            gap: 24px;
+            padding: 24px;
+        }
+
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--bg-glass);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border-secondary);
+            backdrop-filter: blur(10px);
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-title .icon {
+            width: 20px;
+            height: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .source-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .source-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-secondary);
+            border-radius: 8px;
+            padding: 12px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .source-item:hover {
+            background: var(--bg-glass-hover);
+            border-color: var(--accent-primary);
+            transform: translateX(2px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .source-item.active {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+            border-color: var(--accent-primary);
+        }
+
+        .source-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--accent-primary);
+        }
+
+        .source-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .source-code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .source-value {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .editor-container {
+            position: relative;
+        }
+
+        #editor {
+            width: 100%;
+            height: 300px;
+            border-radius: 12px;
+            border: 2px solid var(--border-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 15px;
+            transition: all 0.2s ease;
+        }
+
+        #editor:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .validation-status {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: var(--bg-secondary);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid var(--border-secondary);
+            box-shadow: var(--shadow-sm);
+            z-index: 10;
+        }
+
+        .validation-status.valid {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.1));
+            border-color: var(--accent-success);
+            color: var(--accent-success);
+        }
+
+        .validation-status.error {
+            background: linear-gradient(135deg, rgba(220, 38, 38, 0.15), rgba(220, 38, 38, 0.1));
+            border-color: var(--accent-error);
+            color: var(--accent-error);
+        }
+
+        .validation-status.validating {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.1));
+            border-color: var(--accent-warning);
+            color: var(--accent-warning);
+        }
+
+        .status-icon {
+            width: 16px;
+            height: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .errors-container {
+            margin-top: 16px;
+            background: rgba(220, 38, 38, 0.05);
+            border: 1px solid rgba(220, 38, 38, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            display: none;
+        }
+
+        .errors-container.show {
+            display: block;
+        }
+
+        .error-item {
+            color: var(--accent-error);
+            font-size: 13px;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: start;
+            gap: 8px;
+        }
+
+        .error-icon {
+            width: 16px;
+            height: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            background: var(--accent-error);
+            color: white;
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .result-section {
+            margin-top: 20px;
+            padding: 16px;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(16, 185, 129, 0.02));
+            border: 1px solid var(--border-secondary);
+            border-radius: 8px;
+        }
+
+        .result-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .result-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--accent-primary);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid rgba(16, 185, 129, 0.3);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .backend-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-primary);
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .backend-indicator.active {
+            border-color: var(--accent-primary);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .btn {
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background: var(--accent-secondary);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Formula Editor with Backend Validation (mXparser)</h1>
+            <p>Real-time formula validation and evaluation using mXparser on the backend</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="panel">
+                <div class="panel-title">
+                    <span class="icon">📊</span>
+                    Measured Values
+                </div>
+                <div class="source-list" id="measuredValuesList"></div>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-title">
+                    <span class="icon">✏️</span>
+                    Formula Editor
+                </div>
+                <div class="editor-container">
+                    <div class="validation-status" id="validationStatus">
+                        <span class="status-icon">⏳</span>
+                        <span>Ready</span>
+                    </div>
+                    <div id="editor"></div>
+                </div>
+                <div class="errors-container" id="errorsContainer">
+                    <div id="errorsList"></div>
+                </div>
+                <div class="result-section">
+                    <div class="result-label">Calculation Result</div>
+                    <div class="result-value" id="resultValue">Enter a formula...</div>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-title">
+                    <span class="icon">🔢</span>
+                    Constants
+                </div>
+                <div class="source-list" id="constantsList"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="backend-indicator" id="backendIndicator">
+        <span>Backend: Ready</span>
+    </div>
+
+    <!-- ACE Editor -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/mode-javascript.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/theme-tomorrow.js"></script>
+    
+    <script>
+        // Data sources
+        const measuredValues = {
+            '$temperature': { name: 'Temperature', value: 25.5 },
+            '$pressure': { name: 'Pressure', value: 101.3 },
+            '$humidity': { name: 'Humidity', value: 65.2 },
+            '$flow_rate': { name: 'Flow Rate', value: 12.8 },
+            '$voltage': { name: 'Voltage', value: 220.0 }
+        };
+
+        const constants = {
+            '#pi': { name: 'Pi', value: 3.14159 },
+            '#gravity': { name: 'Gravity', value: 9.81 },
+            '#max_temp': { name: 'Max Temperature', value: 100.0 },
+            '#min_temp': { name: 'Min Temperature', value: -10.0 },
+            '#conversion_factor': { name: 'Conversion Factor', value: 1.8 }
+        };
+
+        let editor;
+        let validationTimeout;
+        const DEBOUNCE_DELAY = 300; // 300ms debounce
+
+        function initializeEditor() {
+            editor = ace.edit("editor");
+            editor.setTheme("ace/theme/tomorrow");
+            editor.session.setMode("ace/mode/javascript");
+            editor.setOptions({
+                fontSize: "15px",
+                showGutter: false,
+                highlightActiveLine: true,
+                wrap: true
+            });
+
+            // Set initial value
+            editor.setValue("($temperature * #conversion_factor) + 32", 1);
+
+            // Add change listener with debouncing
+            editor.session.on('change', () => {
+                clearTimeout(validationTimeout);
+                validationTimeout = setTimeout(performBackendValidation, DEBOUNCE_DELAY);
+                
+                // Show validating status immediately
+                updateValidationStatus('validating');
+            });
+        }
+
+        function renderSourceLists() {
+            // Render measured values
+            const measuredList = document.getElementById('measuredValuesList');
+            measuredList.innerHTML = '';
+            Object.entries(measuredValues).forEach(([key, data]) => {
+                const item = document.createElement('div');
+                item.className = 'source-item';
+                item.innerHTML = `
+                    <div class="source-name">${data.name}</div>
+                    <div class="source-code">${key}</div>
+                    <div class="source-value">Value: ${data.value}</div>
+                `;
+                item.onclick = () => insertIntoEditor(key);
+                measuredList.appendChild(item);
+            });
+
+            // Render constants
+            const constantsList = document.getElementById('constantsList');
+            constantsList.innerHTML = '';
+            Object.entries(constants).forEach(([key, data]) => {
+                const item = document.createElement('div');
+                item.className = 'source-item';
+                item.innerHTML = `
+                    <div class="source-name">${data.name}</div>
+                    <div class="source-code">${key}</div>
+                    <div class="source-value">Value: ${data.value}</div>
+                `;
+                item.onclick = () => insertIntoEditor(key);
+                constantsList.appendChild(item);
+            });
+        }
+
+        function insertIntoEditor(text) {
+            editor.session.insert(editor.getCursorPosition(), text);
+            editor.focus();
+        }
+
+        function updateValidationStatus(status, message = '') {
+            const statusEl = document.getElementById('validationStatus');
+            statusEl.className = `validation-status ${status}`;
+            
+            switch(status) {
+                case 'valid':
+                    statusEl.innerHTML = '<span class="status-icon">✓</span><span>Valid</span>';
+                    break;
+                case 'error':
+                    statusEl.innerHTML = '<span class="status-icon">✗</span><span>Error</span>';
+                    break;
+                case 'validating':
+                    statusEl.innerHTML = '<span class="status-icon"><div class="loading-spinner"></div></span><span>Validating...</span>';
+                    break;
+                default:
+                    statusEl.innerHTML = '<span class="status-icon">⏳</span><span>Ready</span>';
+            }
+        }
+
+        function showErrors(errors) {
+            const errorsContainer = document.getElementById('errorsContainer');
+            const errorsList = document.getElementById('errorsList');
+            
+            if (errors && errors.length > 0) {
+                errorsList.innerHTML = errors.map(error => `
+                    <div class="error-item">
+                        <span class="error-icon">!</span>
+                        <span>${error}</span>
+                    </div>
+                `).join('');
+                errorsContainer.classList.add('show');
+            } else {
+                errorsContainer.classList.remove('show');
+            }
+        }
+
+        function updateResult(value) {
+            const resultEl = document.getElementById('resultValue');
+            if (value !== null && value !== undefined) {
+                // Format the number nicely
+                const formatted = typeof value === 'number' ? value.toFixed(4) : value;
+                resultEl.textContent = formatted;
+            } else {
+                resultEl.textContent = 'Enter a valid formula...';
+            }
+        }
+
+        function updateBackendIndicator(active, message = 'Ready') {
+            const indicator = document.getElementById('backendIndicator');
+            indicator.className = `backend-indicator ${active ? 'active' : ''}`;
+            indicator.innerHTML = `<span>Backend: ${message}</span>`;
+        }
+
+        async function performBackendValidation() {
+            const formula = editor.getValue();
+            
+            if (!formula || formula.trim() === '') {
+                updateValidationStatus('');
+                showErrors([]);
+                updateResult(null);
+                return;
+            }
+
+            updateBackendIndicator(true, 'Validating...');
+
+            // Prepare request data
+            const requestData = {
+                formula: formula,
+                measuredValues: Object.entries(measuredValues).map(([id, data]) => ({
+                    id: id,
+                    name: data.name,
+                    value: data.value
+                })),
+                constants: Object.entries(constants).map(([id, data]) => ({
+                    id: id,
+                    name: data.name,
+                    value: data.value
+                }))
+            };
+
+            try {
+                // Send GraphQL request to backend
+                const response = await fetch(API_CONFIG.URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: `
+                            mutation ValidateFormula($request: ValidationRequestInput!) {
+                                validateFormula(request: $request) {
+                                    isValid
+                                    error
+                                    result
+                                    evaluatedFormula
+                                    source
+                                }
+                            }
+                        `,
+                        variables: {
+                            request: requestData
+                        }
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.errors) {
+                    console.error('GraphQL errors:', data.errors);
+                    updateValidationStatus('error');
+                    showErrors(['Backend validation error']);
+                    updateResult(null);
+                    updateBackendIndicator(false, 'Error');
+                    return;
+                }
+
+                const validationResult = data.data.validateFormula;
+                
+                if (validationResult.isValid) {
+                    updateValidationStatus('valid');
+                    showErrors([]);
+                    updateResult(validationResult.result);
+                    
+                    // Clear any ACE editor annotations
+                    editor.session.clearAnnotations();
+                } else {
+                    updateValidationStatus('error');
+                    showErrors([validationResult.error || 'Invalid formula']);
+                    updateResult(null);
+                    
+                    // Add error annotation to ACE editor
+                    editor.session.setAnnotations([{
+                        row: 0,
+                        column: 0,
+                        text: validationResult.error || 'Invalid formula',
+                        type: "error"
+                    }]);
+                }
+                
+                updateBackendIndicator(false, 'Ready');
+                
+            } catch (error) {
+                console.error('Validation error:', error);
+                updateValidationStatus('error');
+                showErrors(['Failed to connect to backend']);
+                updateResult(null);
+                updateBackendIndicator(false, 'Offline');
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeEditor();
+            renderSourceLists();
+            
+            // Initial validation
+            setTimeout(performBackendValidation, 100);
+        });
+    </script>
+</body>
+</html>
