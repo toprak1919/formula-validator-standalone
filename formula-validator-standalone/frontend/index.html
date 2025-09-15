@@ -1394,46 +1394,112 @@
             // This was causing "Cannot read properties of undefined" errors
             // Variables ($) and constants (#) still work in autocomplete
 
+            // Available units for autocomplete
+            const availableUnits = [
+                { name: 'meter', aliases: ['m', 'meters', 'metre'], description: 'Base unit of length' },
+                { name: 'kilometer', aliases: ['km', 'kilometre'], description: '1000 meters' },
+                { name: 'astronomical', aliases: ['au', 'astronomical_unit', 'astronomicalunit'], description: 'Astronomical unit (~150M km)' }
+            ];
+
             // Custom autocomplete
             const customCompleter = {
                 getCompletions: function(editor, session, pos, prefix, callback) {
                     const completions = [];
 
-                    // Add measured values
-                    Object.entries(measuredValues).forEach(([key, data]) => {
-                        completions.push({
-                            caption: key,
-                            value: key,
-                            meta: `Value: ${data.value}`,
-                            score: 1000
-                        });
-                    });
+                    // Get the text before cursor to check for unit completion
+                    const line = session.getLine(pos.row);
+                    const textBeforeCursor = line.substring(0, pos.column);
 
-                    // Add constants
-                    Object.entries(constants).forEach(([key, data]) => {
-                        completions.push({
-                            caption: key,
-                            value: key,
-                            meta: `Value: ${data.value}`,
-                            score: 900
-                        });
-                    });
+                    // Check if we're after a variable followed by a dot, with optional unit prefix
+                    // Examples it should match:
+                    // - "$temperature." (empty unit prefix)
+                    // - "$temperature.k" (partial unit prefix)
+                    const varDotPattern = /\$([a-zA-Z_][a-zA-Z0-9_]*)\.\s*([a-zA-Z_]*)$/;
+                    const varDotMatch = textBeforeCursor.match(varDotPattern);
 
-                    // Add functions
-                    [...functionsDB.basic, ...functionsDB.trig, ...functionsDB.math, ...functionsDB.stat].forEach(func => {
-                        completions.push({
-                            caption: func.name,
-                            value: func.name.split('(')[0] + '(',
-                            meta: func.desc,
-                            score: 800
+                    if (varDotMatch) {
+                        // We're after a variable dot, show unit suggestions
+                        const varName = '$' + varDotMatch[1];
+                        const typedUnitPrefix = (varDotMatch[2] || '').toLowerCase();
+                        const variable = measuredValues[varName];
+
+                        // Helper to push a completion if it matches the typed prefix
+                        function pushIfMatches(caption, value, meta, score) {
+                            if (!typedUnitPrefix || caption.toLowerCase().startsWith(typedUnitPrefix)) {
+                                completions.push({ caption, value, meta, score });
+                            }
+                        }
+
+                        // Add available units (and aliases), filtered by the typed prefix after the dot
+                        availableUnits.forEach(unit => {
+                            // Main unit name
+                            pushIfMatches(unit.name, unit.name, unit.description, 1100);
+                            // Aliases
+                            unit.aliases.forEach(alias => {
+                                if (alias !== unit.name) {
+                                    pushIfMatches(alias, alias, `Alias for ${unit.name}`, 1050);
+                                }
+                            });
                         });
-                    });
+
+                        // If the variable has a unit, show it
+                        if (variable && variable.unit) {
+                            completions.forEach(c => {
+                                if (
+                                    c.caption.toLowerCase() === variable.unit.toLowerCase() ||
+                                    c.caption.toLowerCase() === 'meter' ||
+                                    c.caption.toLowerCase() === 'm'
+                                ) {
+                                    c.meta += ' (current unit)';
+                                }
+                            });
+                        }
+                    } else {
+                        // Normal autocomplete for variables, constants, and functions
+
+                        // Add measured values
+                        Object.entries(measuredValues).forEach(([key, data]) => {
+                            completions.push({
+                                caption: key,
+                                value: key,
+                                meta: `Value: ${data.value}${data.unit ? ` (${data.unit})` : ''}`,
+                                score: 1000
+                            });
+                        });
+
+                        // Add constants
+                        Object.entries(constants).forEach(([key, data]) => {
+                            completions.push({
+                                caption: key,
+                                value: key,
+                                meta: `Value: ${data.value}`,
+                                score: 900
+                            });
+                        });
+
+                        // Add functions
+                        [...functionsDB.basic, ...functionsDB.trig, ...functionsDB.math, ...functionsDB.stat].forEach(func => {
+                            completions.push({
+                                caption: func.name,
+                                value: func.name.split('(')[0] + '(',
+                                meta: func.desc,
+                                score: 800
+                            });
+                        });
+                    }
 
                     callback(null, completions);
                 }
             };
 
             editor.completers = [customCompleter];
+
+            // Trigger autocomplete immediately after typing a dot following a variable
+            editor.commands.on('afterExec', function(e) {
+                if (e.command && e.command.name === 'insertstring' && e.args === '.') {
+                    editor.execCommand('startAutocomplete');
+                }
+            });
 
             // Set initial value
             editor.setValue("($temperature * #conversion_factor) + 32", 1);

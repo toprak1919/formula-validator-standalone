@@ -631,7 +631,7 @@ namespace FormulaValidator.Services
             }
 
             // Check for identifiers without proper prefix (not starting with $ or #)
-            // This needs to exclude known functions
+            // This needs to exclude known functions and unit suffixes
             var knownFunctions = new HashSet<string> { "sin", "cos", "tan", "sqrt", "abs", "ln", "log10", "exp", "min", "max", "floor", "ceil", "round", "avg", "if" };
             var identifierPattern = @"\b([a-zA-Z_][a-zA-Z0-9_]*)\b(?!\s*\()";
             var matches = Regex.Matches(formula, identifierPattern);
@@ -640,6 +640,12 @@ namespace FormulaValidator.Services
                 var identifier = match.Groups[1].Value;
                 if (!knownFunctions.Contains(identifier.ToLower()))
                 {
+                    // Check if it's preceded by a dot (indicating it's a unit suffix)
+                    if (match.Index > 0 && formula[match.Index - 1] == '.')
+                    {
+                        continue; // Skip unit suffixes
+                    }
+
                     // Check if it's preceded by $ or #
                     var fullPattern = @"[\$#]" + Regex.Escape(identifier);
                     if (!Regex.IsMatch(formula, fullPattern))
