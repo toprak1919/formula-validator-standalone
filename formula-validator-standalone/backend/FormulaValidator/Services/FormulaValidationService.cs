@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 using FormulaValidator.Models;
-using org.mariuszgromada.math.mxparser;
+using NCalc;
 
 namespace FormulaValidator.Services
 {
@@ -43,94 +43,146 @@ namespace FormulaValidator.Services
                     return result;
                 }
 
-                // Convert our custom syntax to mXparser syntax
-                // First handle unit-suffixed variables like $foo.meter / $foo.astronomical
-                var unitArgs = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
-                var processedFormula = ReplaceUnitSuffixedVariables(formula, request, unitArgs, out var unitError);
-                if (!string.IsNullOrEmpty(unitError))
-                {
-                    result.Error = unitError;
-                    return result;
-                }
-
-                var mxparserFormula = ConvertToMXparserSyntax(processedFormula, request);
+                // Translate our surface syntax to NCalc syntax
+                var ncalcFormula = ConvertToNCalcSyntax(formula, request);
 
                 // Perform post-conversion validation
-                var postConversionError = ValidateConvertedFormula(mxparserFormula);
+                var postConversionError = ValidateConvertedFormula(ncalcFormula);
                 if (!string.IsNullOrEmpty(postConversionError))
                 {
                     result.Error = postConversionError;
                     return result;
                 }
 
-                // Create expression with mXparser
-                var expression = new Expression(mxparserFormula);
+                // Create NCalc expression
+                var expression = new Expression(ncalcFormula, EvaluateOptions.IgnoreCase);
 
-                // Add measured values as arguments (kept as-is)
-                foreach (var measuredValue in request.MeasuredValues)
+                // Hook parameter resolution: $var -> var, #const -> C_const
+                expression.EvaluateParameter += (name, args) =>
                 {
-                    var varName = measuredValue.Id.TrimStart('$');
-                    expression.defineArgument(varName, measuredValue.Value);
-                }
-
-                // Add constants using internal names to avoid collisions with built-ins
-                foreach (var constant in request.Constants)
-                {
-                    var baseName = constant.Id.TrimStart('#');
-                    var internalName = GetInternalConstantName(baseName);
-                    expression.defineConstant(internalName, constant.Value);
-                }
-
-                // Add unit-converted arguments
-                foreach (var kv in unitArgs)
-                {
-                    expression.defineArgument(kv.Key, kv.Value);
-                }
-                
-                // Check syntax
-                if (!expression.checkSyntax())
-                {
-                    var errorMessage = expression.getErrorMessage();
-                    
-                    // Enhance error messages
-                    if (string.IsNullOrEmpty(errorMessage))
+                    // Measured values
+                    var mv = request.MeasuredValues.FirstOrDefault(v =>
+                        string.Equals(v.Id.TrimStart('$'), name, StringComparison.OrdinalIgnoreCase));
+                    if (mv != null)
                     {
-                        errorMessage = "Invalid formula syntax";
+                        args.Result = mv.Value;
+                        return;
                     }
-                    else
+
+                    // Constants (internal name C_name)
+                    if (name.StartsWith("C_", StringComparison.OrdinalIgnoreCase))
                     {
-                        // Make error messages more user-friendly
-                        errorMessage = EnhanceErrorMessage(errorMessage, formula);
+                        var baseName = name.Substring(2);
+                        var c = request.Constants.FirstOrDefault(cc =>
+                            string.Equals(cc.Id.TrimStart('#'), baseName, StringComparison.OrdinalIgnoreCase));
+                        if (c != null)
+                        {
+                            args.Result = c.Value;
+                            return;
+                        }
                     }
-                    
-                    result.Error = errorMessage;
-                    return result;
-                }
-                
-                // Note: Undefined variable/constant checks moved before conversion
-                // to provide better error messages with suggestions
-                
-                // Calculate the result
-                var calculationResult = expression.calculate();
-                
+                };
+
+                // Hook custom functions (mod, avg/mean, if, toUnit)
+                expression.EvaluateFunction += (fname, fargs) =>
+                {
+                    var name = fname.ToLowerInvariant();
+                    switch (name)
+                    {
+                        case "mod":
+                        {
+                            if (fargs.Parameters.Length != 2) throw new ArgumentException("mod(x, y) requires 2 arguments");
+                            var a = Convert.ToDouble(fargs.Parameters[0].Evaluate());
+                            var b = Convert.ToDouble(fargs.Parameters[1].Evaluate());
+                            fargs.Result = a % b;
+                            break;
+                        }
+                        case "avg":
+                        case "mean":
+                        {
+                            if (fargs.Parameters.Length == 0) throw new ArgumentException("avg() requires at least 1 argument");
+                            double sum = 0; int count = 0;
+                            foreach (var p in fargs.Parameters)
+                            {
+                                sum += Convert.ToDouble(p.Evaluate());
+                                count++;
+                            }
+                            fargs.Result = sum / count;
+                            break;
+                        }
+                        case "if":
+                        {
+                            if (fargs.Parameters.Length != 3) throw new ArgumentException("if(cond, a, b) requires 3 arguments");
+                            var condObj = fargs.Parameters[0].Evaluate();
+                            bool cond = condObj is bool bval ? bval : Convert.ToDouble(condObj) != 0.0;
+                            fargs.Result = cond ? fargs.Parameters[1].Evaluate() : fargs.Parameters[2].Evaluate();
+                            break;
+                        }
+                        case "tounit":
+                        {
+                            if (fargs.Parameters.Length != 2) throw new ArgumentException("toUnit(name, unit) requires 2 arguments");
+                            var varName = Convert.ToString(fargs.Parameters[0].Evaluate()) ?? string.Empty;
+                            var targetUnit = Convert.ToString(fargs.Parameters[1].Evaluate()) ?? string.Empty;
+
+                            if (string.IsNullOrWhiteSpace(varName) || string.IsNullOrWhiteSpace(targetUnit))
+                                throw new ArgumentException("toUnit requires non-empty variable name and unit");
+
+                            var mv = request.MeasuredValues.FirstOrDefault(v =>
+                                string.Equals(v.Id.TrimStart('$'), varName, StringComparison.OrdinalIgnoreCase) ||
+                                string.Equals(v.Id, varName, StringComparison.OrdinalIgnoreCase));
+                            if (mv == null)
+                                throw new ArgumentException($"Undefined variable for toUnit: {varName}");
+                            var fromUnit = (mv.Unit ?? string.Empty).Trim();
+                            if (string.IsNullOrEmpty(fromUnit))
+                                throw new ArgumentException($"Variable '{varName}' has no unit defined");
+
+                            // Try UnitsNet conversion; fall back to legacy converter
+                            try
+                            {
+                                if (global::UnitsNet.UnitConverter.TryConvert(mv.Value, fromUnit, targetUnit, out var converted))
+                                {
+                                    fargs.Result = converted;
+                                    break;
+                                }
+                            }
+                            catch
+                            {
+                                // ignore and fall back
+                            }
+
+                            if (LegacyUnitConverter.TryConvert(mv.Value, fromUnit, targetUnit, out var legacy))
+                            {
+                                fargs.Result = legacy;
+                                break;
+                            }
+
+                            throw new ArgumentException($"Cannot convert from '{fromUnit}' to '{targetUnit}'");
+                        }
+                    }
+                };
+
+                // Evaluate
+                var evalObj = expression.Evaluate();
+                var calculationResult = Convert.ToDouble(evalObj);
+
                 // Check for calculation errors
                 if (double.IsNaN(calculationResult))
                 {
                     result.Error = "Unable to calculate result - check formula syntax";
                     return result;
                 }
-                
+
                 if (double.IsInfinity(calculationResult))
                 {
                     result.Error = "Result is infinity - division by zero or overflow";
                     return result;
                 }
-                
+
                 // Success
                 result.IsValid = true;
                 result.Result = calculationResult;
-                result.EvaluatedFormula = mxparserFormula;
-                
+                result.EvaluatedFormula = ncalcFormula;
+
             }
             catch (Exception ex)
             {
@@ -141,20 +193,25 @@ namespace FormulaValidator.Services
             return result;
         }
         
-        private string ConvertToMXparserSyntax(string formula, ValidationRequest request)
+        private string ConvertToNCalcSyntax(string formula, ValidationRequest request)
         {
             var converted = formula;
 
-            // Replace $ variables with their names
+            // Translate $name.unit -> toUnit('name','unit')
+            converted = Regex.Replace(
+                converted,
+                @"\$(?<name>[a-zA-Z_][a-zA-Z0-9_]*)\.(?<unit>[a-zA-Z_][a-zA-Z0-9_]*)",
+                m => $"toUnit('{m.Groups["name"].Value}','{m.Groups["unit"].Value}')");
+
+            // Replace $ variables with their names (not followed by a dot)
             foreach (var measuredValue in request.MeasuredValues)
             {
                 var id = measuredValue.Id.StartsWith("$") ? measuredValue.Id.Substring(1) : measuredValue.Id;
-                // Do not match $id when followed by a dot (handled as unit-suffixed variable earlier)
                 var pattern = $@"\${Regex.Escape(id)}(?![a-zA-Z0-9_\.])";
                 converted = Regex.Replace(converted, pattern, id);
             }
 
-            // Replace # constants with internal names to avoid clashes with built-ins (e.g., pi, e) or functions
+            // Replace # constants with internal names to avoid clashes with built-ins
             foreach (var constant in request.Constants)
             {
                 var id = constant.Id.StartsWith("#") ? constant.Id.Substring(1) : constant.Id;
@@ -163,15 +220,9 @@ namespace FormulaValidator.Services
                 converted = Regex.Replace(converted, pattern, internalName);
             }
 
-            // Convert avg() to mean() for mXparser
-            converted = Regex.Replace(converted, @"\bavg\s*\(", "mean(", RegexOptions.IgnoreCase);
-
-            // Convert % modulo operator to mod() function
-            // Pattern: find expression % expression and convert to mod(expression, expression)
+            // Keep avg() name; also support mean() to be safe
+            // Convert % modulo operator to mod() function so we can implement it
             converted = ConvertModuloOperator(converted);
-
-            // Handle power operator - convert ^ to mXparser's ^ (it's the same)
-            // mXparser already uses ^ for power
 
             return converted;
         }
@@ -303,95 +354,26 @@ namespace FormulaValidator.Services
             return i;
         }
 
-        // Replace tokens like $name.unit with internal argument names and collect their numeric values
-        private string ReplaceUnitSuffixedVariables(
-            string formula,
-            ValidationRequest request,
-            Dictionary<string, double> unitArgs,
-            out string? error)
+        // Legacy unit converter kept as a fallback if UnitsNet cannot handle the conversion by string names
+        private static class LegacyUnitConverter
         {
-            error = null;
-            var pattern = new Regex(@"\$(?<name>[a-zA-Z_][a-zA-Z0-9_]*)\.(?<unit>[a-zA-Z_][a-zA-Z0-9_]*)", RegexOptions.Compiled);
-
-            // Use a local variable to capture errors inside the lambda
-            string? capturedError = null;
-
-            string evaluator(Match m)
-            {
-                var name = m.Groups["name"].Value;
-                var unit = m.Groups["unit"].Value;
-
-                // Find measured value by id "$name" or "name"
-                var mv = request.MeasuredValues.FirstOrDefault(v =>
-                    string.Equals(v.Id, "$" + name, StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(v.Id, name, StringComparison.OrdinalIgnoreCase));
-
-                if (mv == null)
-                {
-                    capturedError = $"Undefined variable with unit: ${name}.{unit}";
-                    return m.Value; // keep original to avoid further issues
-                }
-
-                var fromUnit = (mv.Unit ?? string.Empty).Trim();
-                if (string.IsNullOrEmpty(fromUnit))
-                {
-                    capturedError = $"Variable '{name}' has no unit defined but is used with '.{unit}'.";
-                    return m.Value;
-                }
-
-                if (!UnitConverter.TryConvert(mv.Value, fromUnit, unit, out var converted))
-                {
-                    capturedError = $"Cannot convert variable '{name}' from '{fromUnit}' to '{unit}'.";
-                    return m.Value;
-                }
-
-                var internalName = GetInternalUnitArgName(name, unit);
-                if (!unitArgs.ContainsKey(internalName))
-                    unitArgs[internalName] = converted;
-
-                return internalName;
-            }
-
-            var replaced = pattern.Replace(formula, new MatchEvaluator(evaluator));
-
-            // Assign the captured error to the out parameter after the lambda execution
-            error = capturedError;
-
-            return replaced;
-        }
-
-        private static string GetInternalUnitArgName(string baseName, string unit)
-        {
-            // Ensure valid identifier: start with letter and use only letters, digits, underscore
-            var safeUnit = Regex.Replace(unit, @"[^a-zA-Z0-9_]", "_");
-            return $"MV_{baseName}__{safeUnit}";
-        }
-
-        private static class UnitConverter
-        {
-            // Map aliases to canonical units and category
             private static readonly Dictionary<string, (string Canonical, string Category)> Aliases = new(StringComparer.OrdinalIgnoreCase)
             {
                 // Length
-                {"m", ("m", "length")},
-                {"meter", ("m", "length")},
-                {"metre", ("m", "length")},
-                {"meters", ("m", "length")},
-                {"kilometer", ("km", "length")},
-                {"kilometre", ("km", "length")},
-                {"km", ("km", "length")},
-                {"au", ("au", "length")},
+                {"meter", ("meter", "length")},
+                {"m", ("meter", "length")},
+                {"kilometer", ("kilometer", "length")},
+                {"km", ("kilometer", "length")},
                 {"astronomical", ("au", "length")},
-                {"astronomical_unit", ("au", "length")},
                 {"astronomicalunit", ("au", "length")},
+                {"au", ("au", "length")},
             };
 
-            // Factors to meters for length units
             private static readonly Dictionary<string, double> LengthToMeters = new(StringComparer.OrdinalIgnoreCase)
             {
-                {"m", 1.0},
-                {"km", 1000.0},
-                {"au", 149_597_870_700.0}, // IAU 2012 definition
+                {"meter", 1.0},
+                {"kilometer", 1000.0},
+                {"au", 149_597_870_700.0},
             };
 
             public static bool TryConvert(double value, string fromUnit, string toUnit, out double result)
@@ -419,7 +401,7 @@ namespace FormulaValidator.Services
                 canonical = string.Empty;
                 category = string.Empty;
                 if (string.IsNullOrWhiteSpace(unit)) return false;
-                var key = unit.Trim();
+                var key = unit.Trim().Replace(" ", string.Empty);
                 if (Aliases.TryGetValue(key, out var val))
                 {
                     canonical = val.Canonical;
@@ -429,6 +411,8 @@ namespace FormulaValidator.Services
                 return false;
             }
         }
+
+        
 
         private static string GetInternalConstantName(string baseName)
         {
@@ -709,7 +693,7 @@ namespace FormulaValidator.Services
 
                     // Check if this is a known function name
                     var knownFunctions = new HashSet<string> { "sin", "cos", "tan", "sqrt", "abs", "ln", "log10", "exp",
-                                                                "min", "max", "floor", "ceil", "round", "mean", "mod", "if",
+                                                                "min", "max", "floor", "ceil", "round", "mean", "mod", "if", "tounit",
                                                                 "sum", "prod", "std", "var", "C_pi", "C_gravity", "C_max_temp",
                                                                 "C_min_temp", "C_conversion_factor" };
 

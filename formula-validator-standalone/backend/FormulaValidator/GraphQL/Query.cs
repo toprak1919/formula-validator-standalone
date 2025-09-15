@@ -12,7 +12,7 @@ namespace FormulaValidator.GraphQL
             _validationService = validationService;
         }
 
-        public string GetHello() => "Formula Validator API with mXparser!";
+        public string GetHello() => "Formula Validator API with NCalc + UnitsNet!";
 
         public ValidationResult ValidateFormula(ValidationRequest request)
         {
