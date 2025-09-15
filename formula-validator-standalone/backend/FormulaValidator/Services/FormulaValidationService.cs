@@ -55,7 +55,7 @@ namespace FormulaValidator.Services
                 }
 
                 // Create NCalc expression
-                var expression = new Expression(ncalcFormula, EvaluateOptions.IgnoreCase);
+                var expression = new Expression(ncalcFormula);
 
                 // Hook parameter resolution: $var -> var, #const -> C_const
                 expression.EvaluateParameter += (name, args) =>
@@ -139,11 +139,10 @@ namespace FormulaValidator.Services
                             // Try UnitsNet conversion; fall back to legacy converter
                             try
                             {
-                                if (global::UnitsNet.UnitConverter.TryConvert(mv.Value, fromUnit, targetUnit, out var converted))
-                                {
-                                    fargs.Result = converted;
-                                    break;
-                                }
+                                // Try direct conversion with UnitsNet
+                                var convertedValue = global::UnitsNet.UnitConverter.ConvertByName(mv.Value, "Length", fromUnit, targetUnit);
+                                fargs.Result = convertedValue;
+                                break;
                             }
                             catch
                             {
