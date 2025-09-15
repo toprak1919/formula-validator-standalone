@@ -185,14 +185,15 @@
 
         .main-content {
             display: grid;
-            grid-template-columns: 320px 1fr 380px;
+            grid-template-columns: minmax(260px, 320px) 1fr minmax(320px, 420px);
             gap: 24px;
             padding: 24px;
+            align-items: start;
         }
 
         @media (max-width: 1400px) {
             .main-content {
-                grid-template-columns: 280px 1fr 320px;
+                grid-template-columns: minmax(240px, 280px) 1fr minmax(280px, 340px);
             }
         }
 
@@ -209,6 +210,10 @@
             border: 1px solid var(--border-secondary);
             backdrop-filter: blur(10px);
             animation: slideIn 0.6s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-height: 0;
         }
 
         .panel-title {
@@ -255,9 +260,10 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
-            max-height: 400px;
+            max-height: clamp(260px, 50vh, 560px);
             overflow-y: auto;
             padding-right: 4px;
+            overscroll-behavior: contain;
         }
 
         .source-list::-webkit-scrollbar {
@@ -317,12 +323,17 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 4px;
+            gap: 8px;
         }
 
         .source-name {
             font-size: 14px;
             font-weight: 500;
             color: var(--text-primary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 70%;
         }
 
         .source-actions {
@@ -341,6 +352,7 @@
             font-size: 12px;
             color: var(--text-secondary);
             margin-bottom: 4px;
+            overflow-wrap: anywhere;
         }
 
         .source-value {
@@ -656,8 +668,9 @@
             display: flex;
             flex-direction: column;
             gap: 4px;
-            max-height: 150px;
+            max-height: clamp(100px, 22vh, 220px);
             overflow-y: auto;
+            overscroll-behavior: contain;
         }
 
         .history-item {
@@ -686,21 +699,23 @@
 
         .functions-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
             gap: 8px;
-            max-height: 400px;
+            max-height: clamp(260px, 50vh, 560px);
             overflow-y: auto;
             padding-right: 4px;
+            overscroll-behavior: contain;
         }
 
         .function-item {
-            padding: 8px;
+            padding: 10px 8px;
             background: var(--bg-secondary);
             border: 1px solid var(--border-secondary);
-            border-radius: 6px;
+            border-radius: 8px;
             text-align: center;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+            outline: none;
         }
 
         .function-item:hover {
@@ -710,17 +725,31 @@
             box-shadow: var(--shadow-sm);
         }
 
+        .function-item:focus-visible,
+        .source-item:focus-visible,
+        .icon-btn:focus-visible,
+        .btn:focus-visible {
+            outline: 2px solid var(--accent-primary);
+            outline-offset: 2px;
+        }
+
         .function-name {
             font-family: 'JetBrains Mono', monospace;
             font-size: 12px;
-            font-weight: 500;
+            font-weight: 600;
             color: var(--text-primary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .function-desc {
             font-size: 10px;
             color: var(--text-muted);
             margin-top: 2px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .tabs {
@@ -728,6 +757,8 @@
             gap: 8px;
             margin-bottom: 12px;
             border-bottom: 1px solid var(--border-secondary);
+            flex-wrap: wrap;
+            overflow-x: auto;
         }
 
         .tab {
@@ -757,6 +788,16 @@
 
         .tab-content.active {
             display: block;
+            animation: fadeIn 0.2s ease;
+        }
+
+        /* Sticky tabs inside panels for improved UX */
+        .panel .tabs {
+            position: sticky;
+            top: 0;
+            background: var(--bg-glass);
+            z-index: 5;
+            padding-top: 8px;
         }
 
         .loading-spinner {
@@ -816,6 +857,16 @@
             background: var(--bg-modal);
             z-index: 1000;
             animation: fadeIn 0.3s ease;
+        }
+        
+        /* Respect reduced motion preferences */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.001ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.001ms !important;
+                scroll-behavior: auto !important;
+            }
         }
 
         .modal.show {
@@ -1552,6 +1603,8 @@
             const item = document.createElement('div');
             item.className = 'source-item';
             item.dataset.key = key;
+            item.tabIndex = 0;
+            item.title = `Insert ${key} into editor`;
 
             item.innerHTML = `
                 <div class="source-header">
@@ -1565,12 +1618,19 @@
                 <div class="source-value">Value: ${data.value}${data.unit ? ' (' + data.unit + ')' : ''}</div>
             `;
 
-            // Click to insert
-            item.addEventListener('click', (e) => {
+            // Click/keyboard to insert
+            const handleInsert = (e) => {
                 if (!e.target.closest('.source-actions') && !item.classList.contains('editing')) {
                     insertIntoEditor(key);
                     item.classList.add('active');
                     setTimeout(() => item.classList.remove('active'), 500);
+                }
+            };
+            item.addEventListener('click', handleInsert);
+            item.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleInsert(e);
                 }
             });
 
@@ -1866,9 +1926,18 @@
                     <div class="function-name">${func.name}</div>
                     <div class="function-desc">${func.desc}</div>
                 `;
-                item.addEventListener('click', () => {
+                item.title = func.desc;
+                item.tabIndex = 0;
+                const insert = () => {
                     const funcName = func.name.split('(')[0] + '(';
                     insertIntoEditor(funcName);
+                };
+                item.addEventListener('click', insert);
+                item.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        insert();
+                    }
                 });
                 container.appendChild(item);
             });
