@@ -1,0 +1,13 @@
+{
+  "builds": [
+    { "src": "formula-validator-standalone/frontend/**", "use": "@vercel/static" },
+    { "src": "api/**/*.js", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "/graphql", "dest": "/api/graphql" },
+    { "src": "/config.js", "dest": "formula-validator-standalone/frontend/config.js" },
+    { "src": "/", "dest": "formula-validator-standalone/frontend/index.html" },
+    { "src": "/(.*)", "dest": "formula-validator-standalone/frontend/$1" }
+  ]
+}
+
