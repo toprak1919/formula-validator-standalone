@@ -567,14 +567,19 @@ namespace FormulaValidator.Services
                 return "unexpected TEOF: EOF";
             }
 
-            // Check for double increment operator ++
-            if (formula.Contains("++"))
+            // Check for double operators more comprehensively
+            if (Regex.IsMatch(formula, @"\+\+"))
             {
                 return "Double increment operator ++ is not allowed";
             }
 
-            // Check for double addition operators
-            if (Regex.IsMatch(formula, @"\+\s*\+"))
+            if (Regex.IsMatch(formula, @"\-\-(?!-)"))  // Allow --- for triple negation check
+            {
+                return "Double decrement operator -- is not allowed";
+            }
+
+            // Check for double addition operators with any spacing
+            if (Regex.IsMatch(formula, @"\+\s+\+"))
             {
                 return "Double addition operators are not allowed";
             }
