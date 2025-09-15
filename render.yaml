@@ -14,14 +14,15 @@ services:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
 
-  - type: static
+  - type: web
     name: formula-validator-frontend
+    runtime: static
     rootDir: formula-validator-standalone/frontend
     buildCommand: |
       BACKEND_URL=${BACKEND_URL:-https://formula-validator-api.onrender.com/graphql}
       # Inject backend URL into a meta tag for runtime config
       sed -i "s#</head>#  <meta name=\"backend-url\" content=\"${BACKEND_URL}\" />\n</head>#g" index.html
-    publishPath: .
+    staticPublishPath: .
     envVars:
       - key: BACKEND_URL
         value: https://formula-validator-api.onrender.com/graphql
