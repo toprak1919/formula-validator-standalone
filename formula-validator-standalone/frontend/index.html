@@ -10,35 +10,83 @@
     <script src="config.js"></script>
     <style>
         :root {
-            /* Bright Green Theme - Easy on Eyes */
-            --bg-primary: #f0fdf4;
+            /* Green + white theme */
+            --bg-primary: #f0fdf4;  /* emerald-50 */
             --bg-secondary: #ffffff;
-            --bg-tertiary: #ecfdf5;
+            --bg-tertiary: #ecfdf5; /* emerald-50/100 */
             --bg-card: rgba(255, 255, 255, 0.98);
             --bg-glass: rgba(240, 253, 244, 0.85);
             --bg-glass-hover: rgba(220, 252, 231, 0.9);
-            --bg-modal: rgba(0, 0, 0, 0.5);
+            --bg-modal: rgba(5, 46, 22, 0.55);
 
-            --text-primary: #064e3b;
-            --text-secondary: #047857;
-            --text-muted: #059669;
+            --text-primary: #064e3b;   /* emerald-900 */
+            --text-secondary: #065f46; /* emerald-800 */
+            --text-muted: #047857;     /* emerald-700 */
 
-            --border-primary: rgba(16, 185, 129, 0.2);
-            --border-secondary: rgba(16, 185, 129, 0.1);
-            --border-focus: rgba(16, 185, 129, 0.5);
+            --border-primary: rgba(16, 185, 129, 0.25);  /* emerald-500 */
+            --border-secondary: rgba(16, 185, 129, 0.12);
+            --border-focus: rgba(16, 185, 129, 0.45);
+
+            --accent-primary: #10b981;   /* emerald-500 */
+            --accent-secondary: #059669; /* emerald-600 */
+            --accent-tertiary: #047857;  /* emerald-700 */
+            --accent-warning: #f59e0b;   /* amber-500 */
+            --accent-error: #dc2626;     /* red-600 */
+            --accent-success: #16a34a;   /* green-600 */
+            --accent-info: #10b981;      /* use green for info */
+
+            --shadow-sm: 0 1px 2px rgba(6, 78, 59, 0.08);
+            --shadow-md: 0 4px 6px rgba(16, 185, 129, 0.14);
+            --shadow-lg: 0 10px 15px rgba(16, 185, 129, 0.18);
+            --shadow-xl: 0 20px 25px rgba(16, 185, 129, 0.22);
+
+            /* Code token colors */
+            --code-keyword: #047857;  /* emerald-700 */
+            --code-string:  #065f46;  /* emerald-800 */
+            --code-number:  #059669;  /* emerald-600 */
+            --code-constant:#10b981;  /* emerald-500 */
+            --code-function:#0f766e;  /* teal-700 for separation */
+            --code-operator:#047857;  /* emerald-700 */
+            --code-comment: #64748b;  /* slate-500 for readability */
+        }
+
+        :root[data-theme='dark'] {
+            --bg-primary: #0b1f1a;
+            --bg-secondary: #0f2a22;
+            --bg-tertiary: #123026;
+            --bg-card: rgba(15, 42, 34, 0.95);
+            --bg-glass: rgba(5, 24, 19, 0.65);
+            --bg-glass-hover: rgba(7, 30, 24, 0.75);
+            --bg-modal: rgba(0, 0, 0, 0.6);
+
+            --text-primary: #d1fae5;
+            --text-secondary: #a7f3d0;
+            --text-muted: #86efac;
+
+            --border-primary: rgba(16, 185, 129, 0.35);
+            --border-secondary: rgba(16, 185, 129, 0.2);
+            --border-focus: rgba(16, 185, 129, 0.55);
 
             --accent-primary: #10b981;
             --accent-secondary: #059669;
             --accent-tertiary: #047857;
             --accent-warning: #f59e0b;
             --accent-error: #dc2626;
-            --accent-success: #10b981;
-            --accent-info: #3b82f6;
+            --accent-success: #16a34a;
+            --accent-info: #10b981;
 
-            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-            --shadow-md: 0 4px 6px rgba(16, 185, 129, 0.1);
-            --shadow-lg: 0 10px 15px rgba(16, 185, 129, 0.15);
-            --shadow-xl: 0 20px 25px rgba(16, 185, 129, 0.2);
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.35);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4);
+            --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.45);
+
+            --code-keyword: #34d399;
+            --code-string:  #a7f3d0;
+            --code-number:  #6ee7b7;
+            --code-constant:#10b981;
+            --code-function:#5eead4;
+            --code-operator:#34d399;
+            --code-comment: #94a3b8; /* slate-400 */
         }
 
         * {
@@ -98,11 +146,11 @@
         }
 
         .header {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-tertiary) 100%);
             color: white;
             padding: 24px 32px;
             border-bottom: 1px solid var(--border-primary);
-            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.1);
+            box-shadow: 0 2px 4px rgba(2, 132, 199, 0.15);
             position: relative;
         }
 
@@ -229,7 +277,17 @@
         .panel-title-text {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            position: relative;
+        }
+
+        .panel-title-text::before {
+            content: '';
+            width: 8px;
+            height: 20px;
+            border-radius: 4px;
+            background: linear-gradient(180deg, var(--accent-primary), var(--accent-secondary));
+            display: inline-block;
         }
 
         .panel-actions {
@@ -254,6 +312,190 @@
         .icon-btn:hover {
             background: var(--bg-glass-hover);
             border-color: var(--accent-primary);
+        }
+
+        /* Generic icon container */
+        .icon {
+            width: 16px;
+            height: 16px;
+            position: relative;
+            display: inline-block;
+            color: currentColor;
+        }
+
+        /* Check mark icon */
+        .icon-check::before {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 2px;
+            width: 6px;
+            height: 10px;
+            border-right: 2px solid currentColor;
+            border-bottom: 2px solid currentColor;
+            transform: rotate(45deg);
+            border-radius: 1px;
+        }
+
+        /* Trash icon */
+        .icon-trash::before {
+            content: '';
+            position: absolute;
+            left: 3px;
+            top: 6px;
+            width: 10px;
+            height: 8px;
+            border: 2px solid currentColor;
+            border-top: 2px solid currentColor;
+            border-bottom-left-radius: 2px;
+            border-bottom-right-radius: 2px;
+        }
+        .icon-trash::after {
+            content: '';
+            position: absolute;
+            left: 4px;
+            top: 3px;
+            width: 8px;
+            height: 2px;
+            background: currentColor;
+            border-radius: 1px;
+            box-shadow: 2px 4px 0 -1px transparent; /* no-op, placeholder */
+        }
+
+        /* Edit (pencil) icon */
+        .icon-edit::before {
+            content: '';
+            position: absolute;
+            left: 2px;
+            top: 9px;
+            width: 10px;
+            height: 2px;
+            background: currentColor;
+            transform: rotate(-45deg);
+            border-radius: 1px;
+        }
+        .icon-edit::after {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 6px;
+            width: 4px;
+            height: 4px;
+            background: currentColor;
+            transform: rotate(45deg);
+            border-radius: 1px;
+        }
+
+        /* Document icon */
+        .icon-doc::before {
+            content: '';
+            position: absolute;
+            left: 2px;
+            top: 2px;
+            width: 12px;
+            height: 14px;
+            border: 2px solid currentColor;
+            border-radius: 2px;
+        }
+        .icon-doc::after {
+            content: '';
+            position: absolute;
+            left: 4px;
+            top: 6px;
+            width: 8px;
+            height: 2px;
+            background: currentColor;
+            box-shadow: 0 4px 0 0 currentColor, 0 8px 0 0 currentColor;
+            border-radius: 1px;
+        }
+
+        /* List icon */
+        .icon-list::before {
+            content: '';
+            position: absolute;
+            left: 3px;
+            top: 4px;
+            width: 10px;
+            height: 2px;
+            background: currentColor;
+            border-radius: 1px;
+            box-shadow: 0 4px 0 0 currentColor, 0 8px 0 0 currentColor;
+        }
+
+        /* Copy icon */
+        .icon-copy::before,
+        .icon-copy::after {
+            content: '';
+            position: absolute;
+            border: 2px solid currentColor;
+            border-radius: 2px;
+            width: 10px;
+            height: 12px;
+        }
+        .icon-copy::before { left: 2px; top: 2px; background: transparent; }
+        .icon-copy::after { left: 4px; top: 4px; background: transparent; }
+
+        /* Refresh icon */
+        .icon-refresh::before {
+            content: '';
+            position: absolute;
+            left: 2px;
+            top: 2px;
+            width: 12px;
+            height: 12px;
+            border: 2px solid currentColor;
+            border-radius: 50%;
+        }
+        .icon-refresh::after {
+            content: '';
+            position: absolute;
+            right: 1px;
+            top: 2px;
+            width: 0;
+            height: 0;
+            border-left: 5px solid currentColor;
+            border-top: 3px solid transparent;
+            border-bottom: 3px solid transparent;
+        }
+
+        /* Sun/Moon icons for theme toggle */
+        .icon-moon::before,
+        .icon-sun::before {
+            content: '';
+            position: absolute;
+            left: 2px;
+            top: 2px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+        .icon-moon::after {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 2px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--bg-secondary);
+        }
+        .icon-sun::after {
+            content: '';
+            position: absolute;
+            left: 7px; top: 7px;
+            width: 2px; height: 2px;
+            background: currentColor;
+            border-radius: 50%;
+            box-shadow:
+              -7px 0 0 0 currentColor,
+              7px 0 0 0 currentColor,
+              0 -7px 0 0 currentColor,
+              0 7px 0 0 currentColor,
+              5px 5px 0 0 currentColor,
+              -5px 5px 0 0 currentColor,
+              5px -5px 0 0 currentColor,
+              -5px -5px 0 0 currentColor;
         }
 
         .source-list {
@@ -299,7 +541,7 @@
         }
 
         .source-item.active {
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(16, 185, 129, 0.06));
             border-color: var(--accent-primary);
         }
 
@@ -314,9 +556,17 @@
         }
 
         .source-item.editing {
-            background: var(--bg-tertiary);
+            background: #ffffff;
             cursor: default;
+            border-color: var(--accent-success);
+            box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.12);
+            overflow: visible;
         }
+        .source-item.editing .source-name {
+            max-width: 100%;
+            white-space: normal;
+        }
+        .source-item .source-value { word-break: break-word; }
 
         .source-header {
             display: flex;
@@ -363,8 +613,13 @@
         .source-edit-form {
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            margin-top: 8px;
+            gap: 12px;
+            margin-top: 12px;
+        }
+        /* Subtle separators between stacked fields */
+        .source-edit-form .input-group + .input-group {
+            padding-top: 8px;
+            border-top: 1px solid var(--border-secondary);
         }
 
         .input-group {
@@ -375,9 +630,16 @@
 
         .input-group label {
             font-size: 11px;
-            color: var(--text-muted);
+            color: var(--text-secondary);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.6px;
+        }
+
+        .field-help {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px;
+            line-height: 1.3;
         }
 
         .input-group input {
@@ -389,18 +651,51 @@
             background: var(--bg-secondary);
             color: var(--text-primary);
             transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        .input-group select {
+            padding: 6px 10px;
+            border: 1px solid var(--border-secondary);
+            border-radius: 6px;
+            font-size: 13px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+            width: 100%;
         }
 
         .input-group input:focus {
             outline: none;
             border-color: var(--accent-primary);
-            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+        }
+
+        /* Green accent focus when editing a source */
+        .source-item.editing .input-group input:focus {
+            border-color: var(--accent-success);
+            box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
         }
 
         .edit-actions {
             display: flex;
             gap: 8px;
             margin-top: 4px;
+            justify-content: flex-start;
+        }
+
+        /* Edit form is stacked vertically on all sizes */
+
+        /* Success button variant for green/white scheme */
+        .btn-success {
+            background: var(--accent-success);
+            color: #ffffff;
+        }
+        .btn-success:hover {
+            background: #15803d; /* green-700 */
+        }
+        .source-item.editing .btn.btn-secondary:hover {
+            border-color: var(--accent-success);
         }
 
         .search-box {
@@ -421,16 +716,30 @@
         .search-box input:focus {
             outline: none;
             border-color: var(--accent-primary);
-            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
         }
 
-        .search-box::before {
-            content: '🔍';
+        /* Search icon (CSS only, no emoji) */
+        .search-box::before, .search-box::after {
+            content: '';
             position: absolute;
-            left: 10px;
+            left: 12px;
             top: 50%;
             transform: translateY(-50%);
-            font-size: 14px;
+            pointer-events: none;
+        }
+        .search-box::before {
+            width: 12px;
+            height: 12px;
+            border: 2px solid var(--text-muted);
+            border-radius: 50%;
+            margin-top: -1px;
+        }
+        .search-box::after {
+            width: 6px;
+            height: 2px;
+            background: var(--text-muted);
+            transform: translate(6px, 3px) rotate(45deg);
         }
 
         .editor-container {
@@ -449,7 +758,7 @@
 
         #editor:focus {
             border-color: var(--accent-primary);
-            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
         }
 
         /* ACE Editor text visibility fix */
@@ -458,8 +767,19 @@
             color: var(--text-primary) !important;
         }
 
+        /* Ensure scroller inherits theme background (fixes white editor in dark) */
+        .ace_editor .ace_scroller {
+            background-color: var(--bg-secondary) !important;
+        }
+
         .ace_editor .ace_text-layer {
             color: var(--text-primary) !important;
+        }
+
+        /* Input caret layer */
+        .ace_editor .ace_text-input {
+            color: var(--text-primary) !important;
+            background-color: transparent !important;
         }
 
         .ace_editor .ace_cursor {
@@ -477,7 +797,7 @@
         }
 
         .ace_editor .ace_gutter-active-line {
-            background: rgba(16, 185, 129, 0.1) !important;
+            background: rgba(16, 185, 129, 0.12) !important;
         }
 
         .ace_editor .ace_marker-layer .ace_selection {
@@ -485,7 +805,7 @@
         }
 
         .ace_editor .ace_marker-layer .ace_active-line {
-            background: rgba(16, 185, 129, 0.05) !important;
+            background: rgba(16, 185, 129, 0.08) !important;
         }
 
         /* Variable and constant highlighting */
@@ -501,6 +821,26 @@
             font-weight: 600;
         }
 
+        /* ACE token colors - green accent */
+        .ace_editor .ace_keyword,
+        .ace_editor .ace_storage { color: var(--code-keyword) !important; font-weight: 600; }
+        .ace_editor .ace_string { color: var(--code-string) !important; }
+        .ace_editor .ace_numeric { color: var(--code-number) !important; }
+        .ace_editor .ace_constant,
+        .ace_editor .ace_support.ace_constant { color: var(--code-constant) !important; }
+        .ace_editor .ace_support.ace_function,
+        .ace_editor .ace_entity.ace_name.ace_function { color: var(--code-function) !important; }
+        .ace_editor .ace_operator { color: var(--code-operator) !important; }
+        .ace_editor .ace_comment { color: var(--code-comment) !important; font-style: italic; }
+        .ace_editor .ace_paren,
+        .ace_editor .ace_punctuation { color: var(--text-secondary) !important; }
+        .ace_editor .ace_bracket { color: var(--accent-secondary) !important; }
+        .ace_editor .ace_identifier { color: var(--text-primary) !important; }
+        .ace_editor .ace_variable.ace_parameter { color: var(--text-secondary) !important; }
+        .ace_editor .ace_constant.ace_numeric { color: var(--code-number) !important; }
+        .ace_editor .ace_invalid { color: #fff !important; background-color: rgba(220, 38, 38, 0.6) !important; }
+        .ace_editor .ace_marker-layer .ace_selected-word { border: 1px solid var(--accent-primary) !important; }
+
         /* Autocomplete dropdown */
         .ace_editor.ace_autocomplete {
             background: var(--bg-secondary) !important;
@@ -511,11 +851,11 @@
         }
 
         .ace_editor.ace_autocomplete .ace_marker-layer .ace_active-line {
-            background: rgba(16, 185, 129, 0.1) !important;
+            background: rgba(16, 185, 129, 0.12) !important;
         }
 
         .ace_editor.ace_autocomplete .ace_line-hover {
-            background: rgba(16, 185, 129, 0.05) !important;
+            background: rgba(16, 185, 129, 0.08) !important;
         }
 
         .ace_editor.ace_autocomplete .ace_completion-highlight {
@@ -541,7 +881,7 @@
         }
 
         .validation-status.valid {
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.1));
+            background: linear-gradient(135deg, rgba(22, 163, 74, 0.1), rgba(22, 163, 74, 0.08));
             border-color: var(--accent-success);
             color: var(--accent-success);
         }
@@ -561,11 +901,45 @@
         .status-icon {
             width: 16px;
             height: 16px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
+            display: inline-block;
+            position: relative;
         }
+        /* Default idle dot */
+        .validation-status .status-icon::before {
+            content: '';
+            position: absolute;
+            inset: 3px;
+            border-radius: 50%;
+            background: var(--text-muted);
+        }
+        /* Valid check */
+        .validation-status.valid .status-icon::before {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 2px;
+            width: 5px;
+            height: 9px;
+            border-right: 2px solid var(--accent-success);
+            border-bottom: 2px solid var(--accent-success);
+            transform: rotate(45deg);
+            border-radius: 1px;
+            background: transparent;
+        }
+        /* Error cross */
+        .validation-status.error .status-icon::before,
+        .validation-status.error .status-icon::after {
+            content: '';
+            position: absolute;
+            left: 3px;
+            top: 7px;
+            width: 10px;
+            height: 2px;
+            background: var(--accent-error);
+            border-radius: 1px;
+        }
+        .validation-status.error .status-icon::before { transform: rotate(45deg); }
+        .validation-status.error .status-icon::after { transform: rotate(-45deg); }
 
         .errors-container {
             margin-top: 16px;
@@ -615,7 +989,7 @@
         .result-section {
             margin-top: 20px;
             padding: 16px;
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(16, 185, 129, 0.02));
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.06), rgba(16, 185, 129, 0.03));
             border: 1px solid var(--border-secondary);
             border-radius: 8px;
         }
@@ -804,7 +1178,7 @@
             display: inline-block;
             width: 12px;
             height: 12px;
-            border: 2px solid rgba(16, 185, 129, 0.3);
+            border: 2px solid rgba(16, 185, 129, 0.25);
             border-top-color: var(--accent-primary);
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
@@ -833,7 +1207,7 @@
 
         .backend-indicator.active {
             border-color: var(--accent-primary);
-            background: rgba(16, 185, 129, 0.1);
+            background: rgba(16, 185, 129, 0.12);
             animation: pulse 2s infinite;
         }
 
@@ -909,17 +1283,28 @@
             border: 1px solid var(--border-secondary);
             background: var(--bg-tertiary);
             cursor: pointer;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
             transition: all 0.2s ease;
-            font-size: 18px;
+            position: relative;
         }
 
         .modal-close:hover {
             background: var(--bg-glass-hover);
             border-color: var(--accent-primary);
         }
+        .modal-close::before,
+        .modal-close::after {
+            content: '';
+            position: absolute;
+            width: 14px;
+            height: 2px;
+            background: var(--text-secondary);
+            border-radius: 2px;
+        }
+        .modal-close::before { transform: rotate(45deg); }
+        .modal-close::after { transform: rotate(-45deg); }
 
         .test-controls {
             display: flex;
@@ -993,7 +1378,7 @@
         }
 
         .test-result.pass {
-            background: rgba(16, 185, 129, 0.05);
+            background: rgba(22, 163, 74, 0.05);
             border-color: var(--accent-success);
         }
 
@@ -1029,21 +1414,39 @@
             width: 24px;
             height: 24px;
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
+            position: relative;
         }
 
-        .test-icon.pass {
-            background: var(--accent-success);
-            color: white;
+        .test-icon.pass { background: var(--accent-success); }
+
+        .test-icon.fail { background: var(--accent-error); }
+
+        .test-icon.pass::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 5px;
+            width: 6px;
+            height: 12px;
+            border-right: 2px solid #fff;
+            border-bottom: 2px solid #fff;
+            transform: rotate(45deg);
+            border-radius: 1px;
         }
 
-        .test-icon.fail {
-            background: var(--accent-error);
-            color: white;
+        .test-icon.fail::before,
+        .test-icon.fail::after {
+            content: '';
+            position: absolute;
+            left: 6px;
+            top: 11px;
+            width: 12px;
+            height: 2px;
+            background: #fff;
+            border-radius: 1px;
         }
+        .test-icon.fail::before { transform: rotate(45deg); }
+        .test-icon.fail::after { transform: rotate(-45deg); }
 
         .test-expected {
             font-size: 11px;
@@ -1076,7 +1479,7 @@
 
         .toast.success {
             border-color: var(--accent-success);
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+            background: linear-gradient(135deg, rgba(22, 163, 74, 0.1), rgba(22, 163, 74, 0.06));
         }
 
         .toast.error {
@@ -1086,33 +1489,65 @@
 
         .toast.info {
             border-color: var(--accent-info);
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05));
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
         }
 
         .toast-icon {
             width: 24px;
             height: 24px;
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
+            position: relative;
             flex-shrink: 0;
         }
 
-        .toast.success .toast-icon {
-            background: var(--accent-success);
-            color: white;
-        }
+        .toast.success .toast-icon { background: var(--accent-success); }
+        .toast.error .toast-icon { background: var(--accent-error); }
+        .toast.info .toast-icon { background: var(--accent-info); }
 
-        .toast.error .toast-icon {
-            background: var(--accent-error);
-            color: white;
+        .toast.success .toast-icon::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 5px;
+            width: 6px;
+            height: 12px;
+            border-right: 2px solid #fff;
+            border-bottom: 2px solid #fff;
+            transform: rotate(45deg);
+            border-radius: 1px;
         }
-
-        .toast.info .toast-icon {
-            background: var(--accent-info);
-            color: white;
+        .toast.error .toast-icon::before,
+        .toast.error .toast-icon::after {
+            content: '';
+            position: absolute;
+            left: 6px;
+            top: 11px;
+            width: 12px;
+            height: 2px;
+            background: #fff;
+            border-radius: 1px;
+        }
+        .toast.error .toast-icon::before { transform: rotate(45deg); }
+        .toast.error .toast-icon::after { transform: rotate(-45deg); }
+        .toast.info .toast-icon::before {
+            content: '';
+            position: absolute;
+            left: 11px;
+            top: 6px;
+            width: 2px;
+            height: 10px;
+            background: #fff;
+            border-radius: 1px;
+        }
+        .toast.info .toast-icon::after {
+            content: '';
+            position: absolute;
+            left: 11px;
+            top: 4px;
+            width: 2px;
+            height: 2px;
+            background: #fff;
+            border-radius: 50%;
         }
 
         .toast-message {
@@ -1125,6 +1560,23 @@
             cursor: pointer;
             opacity: 0.6;
             transition: opacity 0.2s ease;
+            width: 18px;
+            height: 18px;
+            position: relative;
+        }
+        .toast-close::before,
+        .toast-close::after {
+            content: '';
+            position: absolute;
+            left: 2px;
+            top: 8px;
+            width: 14px;
+            height: 2px;
+            background: var(--text-secondary);
+            border-radius: 2px;
+        }
+        .toast-close::before { transform: rotate(45deg); }
+        .toast-close::after { transform: rotate(-45deg); }
         }
 
         .toast-close:hover {
@@ -1169,32 +1621,36 @@
 
         <div class="toolbar">
             <button class="btn" id="validateBtn">
-                <span>⚡</span>
+                <span class="icon icon-check" aria-hidden="true"></span>
                 Validate
             </button>
             <button class="btn btn-secondary" id="clearBtn">
-                <span>🗑️</span>
+                <span class="icon icon-trash" aria-hidden="true"></span>
                 Clear
             </button>
             <button class="btn btn-secondary" id="samplesBtn">
-                <span>📝</span>
+                <span class="icon icon-doc" aria-hidden="true"></span>
                 Samples
             </button>
             <button class="btn btn-secondary" id="testSuiteBtn">
-                <span>🧪</span>
+                <span class="icon icon-list" aria-hidden="true"></span>
                 Test Suite
             </button>
             <button class="btn btn-secondary" id="copyFormulaBtn">
-                <span>📋</span>
+                <span class="icon icon-copy" aria-hidden="true"></span>
                 Copy Formula
             </button>
             <button class="btn btn-secondary" id="copyResultBtn">
-                <span>📊</span>
+                <span class="icon icon-copy" aria-hidden="true"></span>
                 Copy Result
+            </button>
+            <button class="btn btn-secondary" id="themeToggleBtn">
+                <span class="icon icon-moon" aria-hidden="true"></span>
+                Theme
             </button>
             <div class="btn-group">
                 <button class="btn btn-secondary" id="simulateChangeBtn">
-                    <span>🔄</span>
+                    <span class="icon icon-refresh" aria-hidden="true"></span>
                     Simulate Changes
                 </button>
             </div>
@@ -1211,7 +1667,6 @@
                 <div class="tab-content active" id="measuredTab">
                     <div class="panel-title">
                         <div class="panel-title-text">
-                            <span>📊</span>
                             Measured Values
                         </div>
                         <div class="panel-actions">
@@ -1227,7 +1682,6 @@
                 <div class="tab-content" id="constantsTab">
                     <div class="panel-title">
                         <div class="panel-title-text">
-                            <span>🔢</span>
                             Constants
                         </div>
                         <div class="panel-actions">
@@ -1244,14 +1698,11 @@
             <!-- Center Panel - Editor -->
             <div class="panel">
                 <div class="panel-title">
-                    <div class="panel-title-text">
-                        <span>✏️</span>
-                        Formula Editor
-                    </div>
+                    <div class="panel-title-text">Formula Editor</div>
                 </div>
                 <div class="editor-container">
                     <div class="validation-status" id="validationStatus">
-                        <span class="status-icon">⏳</span>
+                        <span class="status-icon"></span>
                         <span>Ready</span>
                     </div>
                     <div id="editor"></div>
@@ -1263,7 +1714,9 @@
                     <div class="result-label">Calculation Result</div>
                     <div class="result-value">
                         <span id="resultValue">Enter a formula...</span>
-                        <button class="btn btn-secondary result-copy" id="resultCopyBtn">📋</button>
+                        <button class="btn btn-secondary result-copy" id="resultCopyBtn">
+                            <span class="icon icon-copy" aria-hidden="true"></span>
+                        </button>
                     </div>
                 </div>
                 <div class="formula-history">
@@ -1274,12 +1727,9 @@
 
             <!-- Right Panel - Functions -->
             <div class="panel">
-                <div class="panel-title">
-                    <div class="panel-title-text">
-                        <span>🔧</span>
-                        Functions
+                    <div class="panel-title">
+                        <div class="panel-title-text">Functions</div>
                     </div>
-                </div>
                 <div class="tabs">
                     <button class="tab active" data-tab="basic-func">Basic</button>
                     <button class="tab" data-tab="trig-func">Trigonometric</button>
@@ -1313,7 +1763,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title">Formula Test Suite</h2>
-                <button class="modal-close" id="closeTestModal">✕</button>
+                <button class="modal-close" id="closeTestModal" aria-label="Close"></button>
             </div>
             <div class="test-controls">
                 <button class="btn" id="runTestsBtn">Run All Tests</button>
@@ -1346,7 +1796,10 @@
     <!-- ACE Editor -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/ace.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/ext-language_tools.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/theme-github.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/theme-textmate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/theme-chrome.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/theme-twilight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/theme-tomorrow_night.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/mode-javascript.min.js"></script>
 
     <script>
@@ -1423,7 +1876,7 @@
         // Initialize ACE Editor
         function initializeEditor() {
             editor = ace.edit("editor");
-            editor.setTheme("ace/theme/github");
+            editor.setTheme("ace/theme/chrome");
             editor.session.setMode("ace/mode/javascript");
 
             // Enable language tools
@@ -1610,8 +2063,12 @@
                 <div class="source-header">
                     <div class="source-name">${data.name}</div>
                     <div class="source-actions">
-                        <button class="icon-btn edit-btn" title="Edit">✏️</button>
-                        <button class="icon-btn delete-btn" title="Delete">🗑️</button>
+                        <button class="icon-btn edit-btn" title="Edit" aria-label="Edit">
+                            <span class="icon icon-edit" aria-hidden="true"></span>
+                        </button>
+                        <button class="icon-btn delete-btn" title="Delete" aria-label="Delete">
+                            <span class="icon icon-trash" aria-hidden="true"></span>
+                        </button>
                     </div>
                 </div>
                 <div class="source-code">${key}</div>
@@ -1666,26 +2123,99 @@
             form.className = 'source-edit-form';
             form.innerHTML = `
                 <div class="input-group">
-                    <label>Name</label>
-                    <input type="text" value="${data.name}" id="editName">
+                    <label for="editName">Name</label>
+                    <input type="text" value="${data.name}" id="editName" placeholder="e.g., Temperature">
+                    <div class="field-help">Display name shown in lists and suggestions.</div>
                 </div>
                 <div class="input-group">
-                    <label>Value</label>
-                    <input type="number" value="${data.value}" step="any" id="editValue">
+                    <label for="editValue">Value</label>
+                    <input type="number" value="${data.value}" step="any" id="editValue" placeholder="e.g., 25.5">
+                    <div class="field-help">Numeric value (decimals supported). Uses dot for decimal separator.</div>
                 </div>
                 ${type === 'measured' ? `
                 <div class="input-group">
-                    <label>Unit (optional)</label>
-                    <input type="text" value="${data.unit || ''}" id="editUnit">
+                    <label for="editUnitSelect">Unit (optional)</label>
+                    <select id="editUnitSelect">
+                        <option value="">None</option>
+                        <optgroup label="Length">
+                            <option value="m">meter (m)</option>
+                            <option value="cm">centimeter (cm)</option>
+                            <option value="mm">millimeter (mm)</option>
+                            <option value="km">kilometer (km)</option>
+                            <option value="in">inch (in)</option>
+                            <option value="ft">foot (ft)</option>
+                            <option value="yd">yard (yd)</option>
+                            <option value="mi">mile (mi)</option>
+                        </optgroup>
+                        <optgroup label="Mass">
+                            <option value="kg">kilogram (kg)</option>
+                            <option value="g">gram (g)</option>
+                        </optgroup>
+                        <optgroup label="Time">
+                            <option value="s">second (s)</option>
+                            <option value="ms">millisecond (ms)</option>
+                            <option value="min">minute (min)</option>
+                            <option value="h">hour (h)</option>
+                        </optgroup>
+                        <optgroup label="Temperature">
+                            <option value="K">kelvin (K)</option>
+                            <option value="C">celsius (°C)</option>
+                            <option value="F">fahrenheit (°F)</option>
+                        </optgroup>
+                        <optgroup label="Electricity">
+                            <option value="A">ampere (A)</option>
+                            <option value="V">volt (V)</option>
+                            <option value="Ω">ohm (Ω)</option>
+                        </optgroup>
+                        <optgroup label="Other">
+                            <option value="L">litre (L)</option>
+                            <option value="mL">millilitre (mL)</option>
+                            <option value="Pa">pascal (Pa)</option>
+                            <option value="bar">bar (bar)</option>
+                            <option value="N">newton (N)</option>
+                            <option value="J">joule (J)</option>
+                            <option value="W">watt (W)</option>
+                            <option value="%">percent (%)</option>
+                        </optgroup>
+                        <option value="custom">Custom…</option>
+                    </select>
+                    <input type="text" id="editUnitCustom" placeholder="Enter custom unit" style="display:none;margin-top:6px;">
+                    <div class="field-help">Choose common units or select Custom to enter your own.</div>
                 </div>
                 ` : ''}
                 <div class="edit-actions">
-                    <button class="btn btn-secondary" id="saveEdit">Save</button>
+                    <button class="btn btn-success" id="saveEdit">Save</button>
                     <button class="btn btn-secondary" id="cancelEdit">Cancel</button>
                 </div>
             `;
 
             item.appendChild(form);
+
+            // Unit dropdown behavior (measured only)
+            if (type === 'measured') {
+                const unitSelect = form.querySelector('#editUnitSelect');
+                const unitCustom = form.querySelector('#editUnitCustom');
+
+                // Preselect current unit
+                const currentUnit = (data.unit || '').trim();
+                if (currentUnit) {
+                    const found = Array.from(unitSelect.options).some(opt => opt.value === currentUnit);
+                    if (found) unitSelect.value = currentUnit; else unitSelect.value = 'custom';
+                    if (unitSelect.value === 'custom') {
+                        unitCustom.style.display = '';
+                        unitCustom.value = currentUnit;
+                    }
+                }
+
+                unitSelect.addEventListener('change', () => {
+                    if (unitSelect.value === 'custom') {
+                        unitCustom.style.display = '';
+                        unitCustom.focus();
+                    } else {
+                        unitCustom.style.display = 'none';
+                    }
+                });
+            }
 
             form.querySelector('#saveEdit').addEventListener('click', () => {
                 const newData = {
@@ -1694,10 +2224,17 @@
                 };
 
                 if (type === 'measured') {
-                    const unitInput = form.querySelector('#editUnit');
-                    if (unitInput && unitInput.value) {
-                        newData.unit = unitInput.value;
+                    const unitSelect = form.querySelector('#editUnitSelect');
+                    const unitCustom = form.querySelector('#editUnitCustom');
+                    let unitVal = '';
+                    if (unitSelect) {
+                        if (unitSelect.value === 'custom') {
+                            unitVal = (unitCustom.value || '').trim();
+                        } else {
+                            unitVal = unitSelect.value;
+                        }
                     }
+                    if (unitVal) newData.unit = unitVal;
                     measuredValues[key] = newData;
                     renderMeasuredValues();
                 } else {
@@ -1727,16 +2264,16 @@
 
             switch(status) {
                 case 'valid':
-                    statusEl.innerHTML = '<span class="status-icon">✓</span><span>Valid</span>';
+                    statusEl.innerHTML = '<span class="status-icon"></span><span>Valid</span>';
                     break;
                 case 'error':
-                    statusEl.innerHTML = '<span class="status-icon">✗</span><span>Error</span>';
+                    statusEl.innerHTML = '<span class="status-icon"></span><span>Error</span>';
                     break;
                 case 'validating':
                     statusEl.innerHTML = '<span class="status-icon"><div class="loading-spinner"></div></span><span>Validating...</span>';
                     break;
                 default:
-                    statusEl.innerHTML = '<span class="status-icon">⏳</span><span>Ready</span>';
+                    statusEl.innerHTML = '<span class="status-icon"></span><span>Ready</span>';
             }
         }
 
@@ -2093,9 +2630,7 @@
                         Expected: ${result.expected}<br>
                         Actual: ${result.actual}
                     </div>
-                    <div class="test-icon ${result.passed ? 'pass' : 'fail'}">
-                        ${result.passed ? '✓' : '✗'}
-                    </div>
+                    <div class="test-icon ${result.passed ? 'pass' : 'fail'}"></div>
                 </div>
             `;
             container.appendChild(item);
@@ -2130,9 +2665,9 @@
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
             toast.innerHTML = `
-                <div class="toast-icon">${type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ'}</div>
+                <div class="toast-icon"></div>
                 <div class="toast-message">${message}</div>
-                <div class="toast-close">✕</div>
+                <div class="toast-close" aria-label="Close"></div>
             `;
 
             container.appendChild(toast);
@@ -2177,6 +2712,11 @@
 
         // Event Listeners
         document.addEventListener('DOMContentLoaded', async () => {
+            // Theme handling
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const savedTheme = localStorage.getItem('theme');
+            const initialTheme = savedTheme || (prefersDark ? 'dark' : 'light');
+
             initializeEditor();
             renderSourceLists();
             renderFunctions();
@@ -2184,6 +2724,17 @@
 
             // Initial validation
             setTimeout(performBackendValidation, 100);
+
+            // Apply theme after editor init
+            applyTheme(initialTheme);
+
+            // Theme toggle
+            document.getElementById('themeToggleBtn').addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+                const next = current === 'dark' ? 'light' : 'dark';
+                applyTheme(next);
+                localStorage.setItem('theme', next);
+            });
 
             // Tab switching
             document.querySelectorAll('.tab').forEach(tab => {
@@ -2301,6 +2852,29 @@
                 }
             });
         });
+
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                if (editor) editor.setTheme('ace/theme/tomorrow_night');
+                const icon = document.querySelector('#themeToggleBtn .icon');
+                if (icon) { icon.classList.remove('icon-moon'); icon.classList.add('icon-sun'); }
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+                if (editor) editor.setTheme('ace/theme/chrome');
+                const icon = document.querySelector('#themeToggleBtn .icon');
+                if (icon) { icon.classList.remove('icon-sun'); icon.classList.add('icon-moon'); }
+            }
+            // Force ACE to fully refresh rendering to avoid color glitches
+            if (editor) {
+                setTimeout(() => {
+                    try {
+                        editor.renderer.updateFull(true);
+                        editor.resize(true);
+                    } catch (e) { /* noop */ }
+                }, 0);
+            }
+        }
     </script>
 </body>
 </html>

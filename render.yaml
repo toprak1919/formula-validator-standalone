@@ -14,7 +14,7 @@ services:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
 
-  - type: static
+  - type: static_site
     name: formula-validator-frontend
     rootDir: formula-validator-standalone/frontend
     buildCommand: |
