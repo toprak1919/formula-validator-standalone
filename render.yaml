@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: formula-validator-api
+    name: ultrathink-backend
     runtime: docker
     branch: custom-dsl
     rootDir: formula-validator-standalone/backend/FormulaValidator
@@ -15,15 +15,15 @@ services:
         value: http://0.0.0.0:10000
 
   - type: web
-    name: formula-validator-frontend
+    name: ultrathink-frontend
     runtime: static
     branch: custom-dsl
     rootDir: formula-validator-standalone/frontend
     buildCommand: |
-      BACKEND_URL=${BACKEND_URL:-https://formula-validator-api.onrender.com/graphql}
+      BACKEND_URL=${BACKEND_URL:-https://ultrathink-backend.onrender.com/graphql}
       # Inject backend URL into a meta tag for runtime config
       sed -i "s#</head>#  <meta name=\"backend-url\" content=\"${BACKEND_URL}\" />\n</head>#g" index.html
     staticPublishPath: .
     envVars:
       - key: BACKEND_URL
-        value: https://formula-validator-api.onrender.com/graphql
+        value: https://ultrathink-backend.onrender.com/graphql
