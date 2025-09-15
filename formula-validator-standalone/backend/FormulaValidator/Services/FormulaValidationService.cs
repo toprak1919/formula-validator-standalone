@@ -26,6 +26,15 @@ namespace FormulaValidator.Services
 
                 var formula = request.Formula.Trim();
 
+                // Check for undefined variables and constants FIRST (even before syntax validation)
+                // This provides helpful suggestions even when there are syntax errors
+                var undefinedError = CheckForUndefinedVariablesAndConstants(formula, request);
+                if (!string.IsNullOrEmpty(undefinedError))
+                {
+                    result.Error = undefinedError;
+                    return result;
+                }
+
                 // Perform comprehensive pre-validation
                 var preValidationError = PerformPreValidation(formula);
                 if (!string.IsNullOrEmpty(preValidationError))
@@ -98,31 +107,8 @@ namespace FormulaValidator.Services
                     return result;
                 }
                 
-                // Check for undefined variables (with $ prefix)
-                var undefinedVars = Regex.Matches(formula, @"\$([a-zA-Z_][a-zA-Z0-9_]*)");
-                foreach (Match match in undefinedVars)
-                {
-                    var varName = match.Groups[1].Value;
-                    var fullVarName = "$" + varName;
-                    if (!request.MeasuredValues.Any(mv => mv.Id == fullVarName || mv.Id == varName))
-                    {
-                        result.Error = $"Undefined variable: ${varName}";
-                        return result;
-                    }
-                }
-                
-                // Check for undefined constants (with # prefix)
-                var undefinedConsts = Regex.Matches(formula, @"#([a-zA-Z_][a-zA-Z0-9_]*)");
-                foreach (Match match in undefinedConsts)
-                {
-                    var constName = match.Groups[1].Value;
-                    var fullConstName = "#" + constName;
-                    if (!request.Constants.Any(c => c.Id == fullConstName || c.Id == constName))
-                    {
-                        result.Error = $"Undefined constant: #{constName}";
-                        return result;
-                    }
-                }
+                // Note: Undefined variable/constant checks moved before conversion
+                // to provide better error messages with suggestions
                 
                 // Calculate the result
                 var calculationResult = expression.calculate();
@@ -499,8 +485,10 @@ namespace FormulaValidator.Services
                 return $"parse error [1:{position}]: Expected EOF";
             }
 
-            // Check for missing operators between variables
-            if (Regex.IsMatch(formula, @"\$[a-zA-Z_][a-zA-Z0-9_]*\s+\$[a-zA-Z_][a-zA-Z0-9_]*"))
+            // Check for missing operators between variables (with $ prefix)
+            var varPattern = @"\$[a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)?";
+            var missingOpVarPattern = varPattern + @"\s+" + varPattern;
+            if (Regex.IsMatch(formula, missingOpVarPattern))
             {
                 return "Missing operator between variables";
             }
@@ -556,13 +544,19 @@ namespace FormulaValidator.Services
             }
 
             // Check for leading + operator (special case)
-            if (Regex.IsMatch(formula, @"^\s*\+\s+"))
+            if (Regex.IsMatch(formula, @"^\s*\+\s"))
             {
                 return "Leading + operator is not allowed";
             }
 
             // Check for trailing operators
-            if (Regex.IsMatch(formula, @"[\+\-\*/\^%]\s*$"))
+            if (Regex.IsMatch(formula, @"[\+\*/\^%]\s*$"))
+            {
+                return "unexpected TEOF: EOF";
+            }
+            // Special case for trailing minus (could be negation, but not at the end)
+            if (Regex.IsMatch(formula, @"\d\s*-\s*$") || Regex.IsMatch(formula, @"\)\s*-\s*$") ||
+                Regex.IsMatch(formula, @"[a-zA-Z_][a-zA-Z0-9_]*\s*-\s*$"))
             {
                 return "unexpected TEOF: EOF";
             }
@@ -619,10 +613,10 @@ namespace FormulaValidator.Services
                 var position = match.Index + match.Value.IndexOf("..") + 2;
                 return $"parse error [1:{position}]: Expected EOF";
             }
-            if (Regex.IsMatch(formula, @"\d+\.\d+\.\d+"))
+            if (Regex.IsMatch(formula, @"\d+\.\d+\."))
             {
-                var match = Regex.Match(formula, @"\d+\.\d+\.");
-                var position = match.Index + match.Length + 1;
+                var match = Regex.Match(formula, @"(\d+\.\d+)(\.)\d*");
+                var position = match.Index + match.Groups[1].Length + 1;
                 return $"parse error [1:{position}]: Expected EOF";
             }
 
@@ -731,6 +725,164 @@ namespace FormulaValidator.Services
             }
 
             return null;
+        }
+
+        private string CheckForUndefinedVariablesAndConstants(string formula, ValidationRequest request)
+        {
+            // Check for undefined variables (with $ prefix), including unit-suffixed ones
+            var undefinedVars = Regex.Matches(formula, @"\$([a-zA-Z_][a-zA-Z0-9_]*)");
+            foreach (Match match in undefinedVars)
+            {
+                var varName = match.Groups[1].Value;
+                var fullVarName = "$" + varName;
+
+                // Check if the base variable exists (even if it has a unit suffix)
+                if (!request.MeasuredValues.Any(mv => mv.Id == fullVarName || mv.Id == varName))
+                {
+                    // Find the line and column
+                    var position = GetLineAndColumn(formula, match.Index);
+
+                    // Find best suggestion
+                    var suggestion = FindBestVariableMatch(fullVarName, request.MeasuredValues.Select(mv => mv.Id));
+
+                    var errorMsg = $"Undefined variable: ${varName}";
+                    errorMsg += $"\nLine {position.Line}, Column {position.Column}";
+
+                    if (!string.IsNullOrEmpty(suggestion))
+                    {
+                        errorMsg += $"\nSuggestion: Did you mean \"{suggestion}\"?";
+
+                        // Check if this is a unit-suffixed variable and the suggested variable has a unit
+                        if (match.Index + match.Length < formula.Length && formula[match.Index + match.Length] == '.')
+                        {
+                            var suggestedVar = request.MeasuredValues.FirstOrDefault(mv => mv.Id == suggestion);
+                            if (suggestedVar != null && !string.IsNullOrEmpty(suggestedVar.Unit))
+                            {
+                                errorMsg += $"\nNote: {suggestion} has unit '{suggestedVar.Unit}' and supports unit conversion";
+                            }
+                        }
+                    }
+
+                    return errorMsg;
+                }
+            }
+
+            // Check for undefined constants (with # prefix)
+            var undefinedConsts = Regex.Matches(formula, @"#([a-zA-Z_][a-zA-Z0-9_]*)");
+            foreach (Match match in undefinedConsts)
+            {
+                var constName = match.Groups[1].Value;
+                var fullConstName = "#" + constName;
+                if (!request.Constants.Any(c => c.Id == fullConstName || c.Id == constName))
+                {
+                    // Find the line and column
+                    var position = GetLineAndColumn(formula, match.Index);
+
+                    // Find best suggestion
+                    var suggestion = FindBestConstantMatch(fullConstName, request.Constants.Select(c => c.Id));
+
+                    var errorMsg = $"Undefined constant: #{constName}";
+                    errorMsg += $"\nLine {position.Line}, Column {position.Column}";
+
+                    if (!string.IsNullOrEmpty(suggestion))
+                    {
+                        errorMsg += $"\nSuggestion: Did you mean \"{suggestion}\"?";
+                    }
+
+                    return errorMsg;
+                }
+            }
+
+            return null;
+        }
+
+        private (int Line, int Column) GetLineAndColumn(string text, int index)
+        {
+            // For single-line formulas, line is always 1
+            // Column is index + 1 (1-based indexing)
+            return (1, index + 1);
+        }
+
+        private string FindBestVariableMatch(string input, IEnumerable<string> availableVariables)
+        {
+            const double SIMILARITY_THRESHOLD = 0.6; // 60% similarity required
+            string bestMatch = null;
+            double bestSimilarity = 0;
+
+            foreach (var variable in availableVariables)
+            {
+                var similarity = CalculateSimilarity(input.ToLower(), variable.ToLower());
+                if (similarity > bestSimilarity && similarity >= SIMILARITY_THRESHOLD)
+                {
+                    bestSimilarity = similarity;
+                    bestMatch = variable;
+                }
+            }
+
+            return bestMatch;
+        }
+
+        private string FindBestConstantMatch(string input, IEnumerable<string> availableConstants)
+        {
+            const double SIMILARITY_THRESHOLD = 0.6; // 60% similarity required
+            string bestMatch = null;
+            double bestSimilarity = 0;
+
+            foreach (var constant in availableConstants)
+            {
+                var similarity = CalculateSimilarity(input.ToLower(), constant.ToLower());
+                if (similarity > bestSimilarity && similarity >= SIMILARITY_THRESHOLD)
+                {
+                    bestSimilarity = similarity;
+                    bestMatch = constant;
+                }
+            }
+
+            return bestMatch;
+        }
+
+        private double CalculateSimilarity(string s1, string s2)
+        {
+            if (string.IsNullOrEmpty(s1) || string.IsNullOrEmpty(s2))
+                return 0;
+
+            if (s1 == s2)
+                return 1;
+
+            int distance = CalculateLevenshteinDistance(s1, s2);
+            int maxLength = Math.Max(s1.Length, s2.Length);
+
+            // Convert distance to similarity (0 to 1)
+            return 1.0 - ((double)distance / maxLength);
+        }
+
+        private int CalculateLevenshteinDistance(string s1, string s2)
+        {
+            int[,] d = new int[s1.Length + 1, s2.Length + 1];
+
+            // Initialize base cases
+            for (int i = 0; i <= s1.Length; i++)
+                d[i, 0] = i;
+
+            for (int j = 0; j <= s2.Length; j++)
+                d[0, j] = j;
+
+            // Calculate distances
+            for (int i = 1; i <= s1.Length; i++)
+            {
+                for (int j = 1; j <= s2.Length; j++)
+                {
+                    int cost = (s1[i - 1] == s2[j - 1]) ? 0 : 1;
+
+                    d[i, j] = Math.Min(
+                        Math.Min(
+                            d[i - 1, j] + 1,      // deletion
+                            d[i, j - 1] + 1),     // insertion
+                        d[i - 1, j - 1] + cost);  // substitution
+                }
+            }
+
+            return d[s1.Length, s2.Length];
         }
 
         private string EnhanceErrorMessage(string mxparserError, string originalFormula)
