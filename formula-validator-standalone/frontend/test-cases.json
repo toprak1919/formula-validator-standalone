@@ -391,6 +391,414 @@
       "formula": "(sqrt($pressure) * sin(#pi/6)) + (log10($voltage) * #gravity) - ($humidity / #conversion_factor)",
       "expectedResult": 18.2935,
       "description": "Using all features: variables, constants, functions"
+    },
+    {
+      "id": "missing_operator_numbers",
+      "name": "Missing operator between numbers",
+      "category": "Syntax Errors",
+      "formula": "1 2",
+      "expectedError": "parse error [1:4]: Expected EOF",
+      "description": "Missing operator between numbers"
+    },
+    {
+      "id": "missing_operator_variables",
+      "name": "Missing operator between variables",
+      "category": "Syntax Errors",
+      "formula": "$temperature $pressure",
+      "expectedError": "Missing operator between variables",
+      "description": "Missing operator between variables"
+    },
+    {
+      "id": "standalone_multiply",
+      "name": "Standalone multiplication operator",
+      "category": "Syntax Errors",
+      "formula": "*",
+      "expectedError": "unexpected TOP: *",
+      "description": "Standalone multiplication operator"
+    },
+    {
+      "id": "standalone_divide",
+      "name": "Standalone division operator",
+      "category": "Syntax Errors",
+      "formula": "/",
+      "expectedError": "unexpected TOP: /",
+      "description": "Standalone division operator"
+    },
+    {
+      "id": "standalone_plus",
+      "name": "Standalone addition operator",
+      "category": "Syntax Errors",
+      "formula": "+",
+      "expectedError": "unexpected TEOF: EOF",
+      "description": "Standalone addition operator"
+    },
+    {
+      "id": "standalone_minus",
+      "name": "Standalone subtraction operator",
+      "category": "Syntax Errors",
+      "formula": "-",
+      "expectedError": "unexpected TEOF: EOF",
+      "description": "Standalone subtraction operator"
+    },
+    {
+      "id": "trailing_plus",
+      "name": "Trailing addition operator",
+      "category": "Syntax Errors",
+      "formula": "1 +",
+      "expectedError": "unexpected TEOF: EOF",
+      "description": "Trailing addition operator"
+    },
+    {
+      "id": "trailing_multiply",
+      "name": "Trailing multiplication operator",
+      "category": "Syntax Errors",
+      "formula": "2 *",
+      "expectedError": "unexpected TEOF: EOF",
+      "description": "Trailing multiplication operator"
+    },
+    {
+      "id": "trailing_divide",
+      "name": "Trailing division operator",
+      "category": "Syntax Errors",
+      "formula": "3 /",
+      "expectedError": "unexpected TEOF: EOF",
+      "description": "Trailing division operator"
+    },
+    {
+      "id": "trailing_minus",
+      "name": "Trailing subtraction operator",
+      "category": "Syntax Errors",
+      "formula": "4 -",
+      "expectedError": "unexpected TEOF: EOF",
+      "description": "Trailing subtraction operator"
+    },
+    {
+      "id": "trailing_var_multiply",
+      "name": "Trailing operator after variable",
+      "category": "Syntax Errors",
+      "formula": "$temperature *",
+      "expectedError": "unexpected TEOF: EOF",
+      "description": "Trailing operator after variable"
+    },
+    {
+      "id": "trailing_const_divide",
+      "name": "Trailing operator after constant",
+      "category": "Syntax Errors",
+      "formula": "#pi /",
+      "expectedError": "unexpected TEOF: EOF",
+      "description": "Trailing operator after constant"
+    },
+    {
+      "id": "empty_parens",
+      "name": "Empty parentheses",
+      "category": "Syntax Errors",
+      "formula": "()",
+      "expectedError": "unexpected TPAREN: )",
+      "description": "Empty parentheses"
+    },
+    {
+      "id": "empty_parens_space",
+      "name": "Empty parentheses with space",
+      "category": "Syntax Errors",
+      "formula": "( )",
+      "expectedError": "unexpected TPAREN: )",
+      "description": "Empty parentheses with space"
+    },
+    {
+      "id": "unmatched_open_paren",
+      "name": "Unmatched opening parenthesis",
+      "category": "Syntax Errors",
+      "formula": "(1 + 2",
+      "expectedError": "parse error [1:7]: Expected )",
+      "description": "Unmatched opening parenthesis"
+    },
+    {
+      "id": "unmatched_close_paren",
+      "name": "Unmatched closing parenthesis",
+      "category": "Syntax Errors",
+      "formula": "1 + 2)",
+      "expectedError": "parse error [1:7]: Expected EOF",
+      "description": "Unmatched closing parenthesis"
+    },
+    {
+      "id": "multiple_unmatched_open",
+      "name": "Multiple unmatched opening parentheses",
+      "category": "Syntax Errors",
+      "formula": "((1 + 2)",
+      "expectedError": "parse error [1:9]: Expected )",
+      "description": "Multiple unmatched opening parentheses"
+    },
+    {
+      "id": "multiple_unmatched_close",
+      "name": "Multiple unmatched closing parentheses",
+      "category": "Syntax Errors",
+      "formula": "(1 + 2))",
+      "expectedError": "parse error [1:9]: Expected EOF",
+      "description": "Multiple unmatched closing parentheses"
+    },
+    {
+      "id": "invalid_identifier",
+      "name": "Invalid identifier without prefix",
+      "category": "Syntax Errors",
+      "formula": "just text",
+      "expectedError": "parse error [1:10]: Expected EOF",
+      "description": "Invalid identifier without prefix"
+    },
+    {
+      "id": "unknown_variable",
+      "name": "Undefined variable",
+      "category": "Syntax Errors",
+      "formula": "$unknownVariable",
+      "expectedError": "Undefined variable: $unknownVariable",
+      "description": "Undefined variable"
+    },
+    {
+      "id": "unknown_constant",
+      "name": "Undefined constant",
+      "category": "Syntax Errors",
+      "formula": "#unknownConstant",
+      "expectedError": "Undefined constant: #unknownConstant",
+      "description": "Undefined constant"
+    },
+    {
+      "id": "unknown_function",
+      "name": "Undefined function",
+      "category": "Syntax Errors",
+      "formula": "unknownFunc()",
+      "expectedError": "Undefined variable: unknownFunc",
+      "description": "Undefined function"
+    },
+    {
+      "id": "invalid_decimal_dots",
+      "name": "Invalid decimal notation",
+      "category": "Syntax Errors",
+      "formula": "1..2",
+      "expectedError": "parse error [1:5]: Expected EOF",
+      "description": "Invalid decimal notation"
+    },
+    {
+      "id": "multiple_decimal_points",
+      "name": "Multiple decimal points",
+      "category": "Syntax Errors",
+      "formula": "1.2.3",
+      "expectedError": "parse error [1:6]: Expected EOF",
+      "description": "Multiple decimal points"
+    },
+    {
+      "id": "double_plus_prefix",
+      "name": "Double operators",
+      "category": "Syntax Errors",
+      "formula": "++1",
+      "expectedError": "Double increment operator ++ is not allowed",
+      "description": "Double operators"
+    },
+    {
+      "id": "double_plus_middle",
+      "name": "Double operators in middle",
+      "category": "Syntax Errors",
+      "formula": "1++2",
+      "expectedError": "Double increment operator ++ is not allowed",
+      "description": "Double operators in middle"
+    },
+    {
+      "id": "adjacent_operators",
+      "name": "Adjacent operators",
+      "category": "Syntax Errors",
+      "formula": "1 * / 2",
+      "expectedError": "unexpected TOP: /",
+      "description": "Adjacent operators"
+    },
+    {
+      "id": "leading_multiply",
+      "name": "Leading multiplication operator",
+      "category": "Syntax Errors",
+      "formula": "* 5",
+      "expectedError": "unexpected TOP: *",
+      "description": "Leading multiplication operator"
+    },
+    {
+      "id": "leading_divide",
+      "name": "Leading division operator",
+      "category": "Syntax Errors",
+      "formula": "/ 10",
+      "expectedError": "unexpected TOP: /",
+      "description": "Leading division operator"
+    },
+    {
+      "id": "leading_plus",
+      "name": "Leading addition operator",
+      "category": "Syntax Errors",
+      "formula": "+ 3",
+      "expectedError": "Leading + operator is not allowed",
+      "description": "Leading addition operator"
+    },
+    {
+      "id": "empty_parens_expr",
+      "name": "Empty parentheses in expression",
+      "category": "Syntax Errors",
+      "formula": "() + 5",
+      "expectedError": "unexpected TPAREN: )",
+      "description": "Empty parentheses in expression"
+    },
+    {
+      "id": "empty_parens_end",
+      "name": "Empty parentheses at end",
+      "category": "Syntax Errors",
+      "formula": "5 + ()",
+      "expectedError": "unexpected TPAREN: )",
+      "description": "Empty parentheses at end"
+    },
+    {
+      "id": "func_no_args",
+      "name": "Function with no arguments",
+      "category": "Syntax Errors",
+      "formula": "sqrt()",
+      "expectedError": "unexpected TPAREN: )",
+      "description": "Function with no arguments"
+    },
+    {
+      "id": "func_no_parens",
+      "name": "Function without parentheses",
+      "category": "Syntax Errors",
+      "formula": "sqrt",
+      "expectedError": "Undefined variable: sqrt",
+      "description": "Function without parentheses"
+    },
+    {
+      "id": "missing_value_parens",
+      "name": "Missing value in parentheses",
+      "category": "Syntax Errors",
+      "formula": "(1 + ) * 2",
+      "expectedError": "unexpected TPAREN: )",
+      "description": "Missing value in parentheses"
+    },
+    {
+      "id": "double_add",
+      "name": "Double addition operators",
+      "category": "Syntax Errors",
+      "formula": "1 + + 2",
+      "expectedError": "Double addition operators are not allowed",
+      "description": "Double addition operators"
+    },
+    {
+      "id": "double_multiply",
+      "name": "Double multiplication operators",
+      "category": "Syntax Errors",
+      "formula": "2 * * 3",
+      "expectedError": "unexpected TOP: *",
+      "description": "Double multiplication operators"
+    },
+    {
+      "id": "double_divide",
+      "name": "Double division operators",
+      "category": "Syntax Errors",
+      "formula": "3 / / 4",
+      "expectedError": "unexpected TOP: /",
+      "description": "Double division operators"
+    },
+    {
+      "id": "triple_negation",
+      "name": "Triple negation",
+      "category": "Syntax Errors",
+      "formula": "---5",
+      "expectedError": "Triple negation is not allowed",
+      "description": "Triple negation"
+    },
+    {
+      "id": "standalone_dollar",
+      "name": "Standalone $ symbol",
+      "category": "Syntax Errors",
+      "formula": "$",
+      "expectedError": "parse error [1:1]: Unknown character \"$\"",
+      "description": "Standalone $ symbol"
+    },
+    {
+      "id": "standalone_hash",
+      "name": "Standalone # symbol",
+      "category": "Syntax Errors",
+      "formula": "#",
+      "expectedError": "Invalid use of # symbol",
+      "description": "Standalone # symbol"
+    },
+    {
+      "id": "double_hash",
+      "name": "Double hash prefix",
+      "category": "Syntax Errors",
+      "formula": "##pi",
+      "expectedError": "Invalid use of # symbol",
+      "description": "Double hash prefix"
+    },
+    {
+      "id": "double_dollar",
+      "name": "Double dollar prefix",
+      "category": "Syntax Errors",
+      "formula": "$$temperature",
+      "expectedError": "Undefined variable: $var_temperature",
+      "description": "Double dollar prefix"
+    },
+    {
+      "id": "hash_number",
+      "name": "Hash followed by number",
+      "category": "Syntax Errors",
+      "formula": "#123",
+      "expectedError": "Invalid use of # symbol",
+      "description": "Hash followed by number"
+    },
+    {
+      "id": "dollar_number",
+      "name": "Dollar followed by only numbers",
+      "category": "Syntax Errors",
+      "formula": "$456",
+      "expectedError": "parse error [1:1]: Unknown character \"$\"",
+      "description": "Dollar followed by only numbers"
+    },
+    {
+      "id": "multiple_nums_no_ops",
+      "name": "Multiple numbers without operators",
+      "category": "Syntax Errors",
+      "formula": "1 2 3",
+      "expectedError": "parse error [1:4]: Expected EOF",
+      "description": "Multiple numbers without operators"
+    },
+    {
+      "id": "missing_op_parens",
+      "name": "Missing operator in parentheses",
+      "category": "Syntax Errors",
+      "formula": "(1 2)",
+      "expectedError": "parse error [1:5]: Expected )",
+      "description": "Missing operator in parentheses"
+    },
+    {
+      "id": "nested_func_empty",
+      "name": "Nested function with empty inner",
+      "category": "Syntax Errors",
+      "formula": "sin(cos(tan()))",
+      "expectedError": "unexpected TPAREN: )",
+      "description": "Nested function with empty inner"
+    },
+    {
+      "id": "complex_trailing_op",
+      "name": "Complex expression with trailing operator",
+      "category": "Syntax Errors",
+      "formula": "1 + 2 +",
+      "expectedError": "unexpected TEOF: EOF",
+      "description": "Complex expression with trailing operator"
+    },
+    {
+      "id": "leading_op_var",
+      "name": "Leading operator before variable",
+      "category": "Syntax Errors",
+      "formula": "* $temperature",
+      "expectedError": "unexpected TOP: *",
+      "description": "Leading operator before variable"
+    },
+    {
+      "id": "leading_op_const",
+      "name": "Leading operator before constant",
+      "category": "Syntax Errors",
+      "formula": "/ #pi",
+      "expectedError": "unexpected TOP: /",
+      "description": "Leading operator before constant"
     }
   ],
   "measuredValues": {
