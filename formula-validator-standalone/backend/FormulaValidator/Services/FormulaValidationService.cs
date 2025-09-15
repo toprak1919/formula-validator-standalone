@@ -46,6 +46,14 @@ namespace FormulaValidator.Services
 
                 var mxparserFormula = ConvertToMXparserSyntax(processedFormula, request);
 
+                // Perform post-conversion validation
+                var postConversionError = ValidateConvertedFormula(mxparserFormula);
+                if (!string.IsNullOrEmpty(postConversionError))
+                {
+                    result.Error = postConversionError;
+                    return result;
+                }
+
                 // Create expression with mXparser
                 var expression = new Expression(mxparserFormula);
 
@@ -150,7 +158,7 @@ namespace FormulaValidator.Services
         private string ConvertToMXparserSyntax(string formula, ValidationRequest request)
         {
             var converted = formula;
-            
+
             // Replace $ variables with their names
             foreach (var measuredValue in request.MeasuredValues)
             {
@@ -159,7 +167,7 @@ namespace FormulaValidator.Services
                 var pattern = $@"\${Regex.Escape(id)}(?![a-zA-Z0-9_\.])";
                 converted = Regex.Replace(converted, pattern, id);
             }
-            
+
             // Replace # constants with internal names to avoid clashes with built-ins (e.g., pi, e) or functions
             foreach (var constant in request.Constants)
             {
@@ -168,11 +176,145 @@ namespace FormulaValidator.Services
                 var pattern = $@"#{Regex.Escape(id)}(?![a-zA-Z0-9_])";
                 converted = Regex.Replace(converted, pattern, internalName);
             }
-            
+
+            // Convert avg() to mean() for mXparser
+            converted = Regex.Replace(converted, @"\bavg\s*\(", "mean(", RegexOptions.IgnoreCase);
+
+            // Convert % modulo operator to mod() function
+            // Pattern: find expression % expression and convert to mod(expression, expression)
+            converted = ConvertModuloOperator(converted);
+
             // Handle power operator - convert ^ to mXparser's ^ (it's the same)
             // mXparser already uses ^ for power
-            
+
             return converted;
+        }
+
+        private string ConvertModuloOperator(string formula)
+        {
+            // Keep converting until no more % operators are found
+            while (formula.Contains("%"))
+            {
+                var index = formula.IndexOf('%');
+                if (index == -1) break;
+
+                // Find the left operand
+                var leftStart = FindOperandStart(formula, index - 1, true);
+                var leftOperand = formula.Substring(leftStart, index - leftStart).Trim();
+
+                // Find the right operand
+                var rightEnd = FindOperandEnd(formula, index + 1, false);
+                var rightOperand = formula.Substring(index + 1, rightEnd - index - 1).Trim();
+
+                // Replace with mod() function
+                var modExpression = $"mod({leftOperand}, {rightOperand})";
+                formula = formula.Substring(0, leftStart) + modExpression + formula.Substring(rightEnd);
+            }
+
+            return formula;
+        }
+
+        private int FindOperandStart(string formula, int startPos, bool goingLeft)
+        {
+            int depth = 0;
+            int i = startPos;
+
+            // Skip whitespace
+            while (i >= 0 && char.IsWhiteSpace(formula[i])) i--;
+
+            if (i < 0) return 0;
+
+            // If we hit a closing parenthesis, we need to find the matching opening one
+            if (formula[i] == ')')
+            {
+                depth = 1;
+                i--;
+                while (i >= 0 && depth > 0)
+                {
+                    if (formula[i] == ')') depth++;
+                    else if (formula[i] == '(') depth--;
+                    i--;
+                }
+                // Now find if there's a function name before the parenthesis
+                while (i >= 0 && (char.IsLetterOrDigit(formula[i]) || formula[i] == '_' || formula[i] == '.'))
+                {
+                    i--;
+                }
+                return i + 1;
+            }
+
+            // Otherwise, find the start of a simple operand (number or variable)
+            while (i >= 0 && (char.IsLetterOrDigit(formula[i]) || formula[i] == '_' || formula[i] == '.'))
+            {
+                i--;
+            }
+
+            return i + 1;
+        }
+
+        private int FindOperandEnd(string formula, int startPos, bool goingRight)
+        {
+            int depth = 0;
+            int i = startPos;
+
+            // Skip whitespace
+            while (i < formula.Length && char.IsWhiteSpace(formula[i])) i++;
+
+            if (i >= formula.Length) return formula.Length;
+
+            // Check for unary minus
+            if (formula[i] == '-' || formula[i] == '+')
+            {
+                i++;
+                while (i < formula.Length && char.IsWhiteSpace(formula[i])) i++;
+            }
+
+            // If we hit an opening parenthesis, find the matching closing one
+            if (i < formula.Length && formula[i] == '(')
+            {
+                depth = 1;
+                i++;
+                while (i < formula.Length && depth > 0)
+                {
+                    if (formula[i] == '(') depth++;
+                    else if (formula[i] == ')') depth--;
+                    i++;
+                }
+                return i;
+            }
+
+            // Check if it's a function call
+            int funcStart = i;
+            while (i < formula.Length && (char.IsLetter(formula[i]) || formula[i] == '_'))
+            {
+                i++;
+            }
+
+            // Skip whitespace after potential function name
+            while (i < formula.Length && char.IsWhiteSpace(formula[i])) i++;
+
+            // If followed by '(', it's a function call
+            if (i < formula.Length && formula[i] == '(')
+            {
+                depth = 1;
+                i++;
+                while (i < formula.Length && depth > 0)
+                {
+                    if (formula[i] == '(') depth++;
+                    else if (formula[i] == ')') depth--;
+                    i++;
+                }
+                return i;
+            }
+
+            // Otherwise, just find the end of a simple operand
+            i = funcStart;
+            while (i < formula.Length && (char.IsLetterOrDigit(formula[i]) || formula[i] == '_' || formula[i] == '.'))
+            {
+                i++;
+            }
+
+            return i;
         }
 
         // Replace tokens like $name.unit with internal argument names and collect their numeric values
@@ -529,6 +671,61 @@ namespace FormulaValidator.Services
             }
 
             return null; // No pre-validation errors found
+        }
+
+        private string ValidateConvertedFormula(string formula)
+        {
+            // Check for adjacent identifiers without operators (after conversion)
+            // This catches cases like "temperature pressure" which result from "$temperature $pressure"
+            var identifierPattern = @"\b([a-zA-Z_][a-zA-Z0-9_]*)\b";
+            var matches = Regex.Matches(formula, identifierPattern);
+
+            for (int i = 0; i < matches.Count - 1; i++)
+            {
+                var currentMatch = matches[i];
+                var nextMatch = matches[i + 1];
+
+                // Get the text between the two identifiers
+                var betweenStart = currentMatch.Index + currentMatch.Length;
+                var betweenEnd = nextMatch.Index;
+                var between = formula.Substring(betweenStart, betweenEnd - betweenStart);
+
+                // Check if there's only whitespace between them (no operator)
+                if (string.IsNullOrWhiteSpace(between))
+                {
+                    // Check if these are function calls or valid syntax
+                    bool isFunction = false;
+
+                    // Check if the first identifier is followed by parentheses (function call)
+                    if (betweenEnd < formula.Length && formula[betweenEnd - 1] == '(')
+                    {
+                        isFunction = true;
+                    }
+
+                    // Check if this is a known function name
+                    var knownFunctions = new HashSet<string> { "sin", "cos", "tan", "sqrt", "abs", "ln", "log10", "exp",
+                                                                "min", "max", "floor", "ceil", "round", "mean", "mod", "if",
+                                                                "sum", "prod", "std", "var", "C_pi", "C_gravity", "C_max_temp",
+                                                                "C_min_temp", "C_conversion_factor" };
+
+                    if (!isFunction && !knownFunctions.Contains(currentMatch.Value) && !knownFunctions.Contains(nextMatch.Value))
+                    {
+                        // Check if they look like variables (were originally $var)
+                        return "Missing operator between variables";
+                    }
+                }
+            }
+
+            // Check for adjacent numbers without operators
+            var numberPattern = @"(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)";
+            if (Regex.IsMatch(formula, numberPattern))
+            {
+                var match = Regex.Match(formula, numberPattern);
+                var position = match.Index + match.Groups[1].Length + match.Value.TrimEnd().Length - match.Groups[2].Length + 1;
+                return $"parse error [1:{position}]: Expected EOF";
+            }
+
+            return null;
         }
 
         private string EnhanceErrorMessage(string mxparserError, string originalFormula)
