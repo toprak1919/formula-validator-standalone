@@ -7,10 +7,26 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- GraphQL & Swagger (unchanged) -->
     <PackageReference Include="HotChocolate.AspNetCore" Version="15.1.8" />
-    <PackageReference Include="MathParser.org-mXparser" Version="6.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.17" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+
+    <!-- NEW: ANTLR codegen + runtime -->
+    <PackageReference Include="Antlr4BuildTasks" Version="10.*" PrivateAssets="all" />
+    <PackageReference Include="Antlr4.CodeGenerator" Version="4.6.6" PrivateAssets="all" />
+    <PackageReference Include="Antlr4.Runtime" Version="4.6.6" />
+
+    <!-- NEW: Units library -->
+    <PackageReference Include="UnitsNet" Version="5.*" />
+  </ItemGroup>
+
+  <!-- Generate C# parser/lexer from our grammar at build -->
+  <ItemGroup>
+    <Antlr4 Include="Parsing\Formula.g4"
+            Listener="false"
+            Visitor="true"
+            Package="FormulaValidator.Parsing" />
   </ItemGroup>
 
 </Project>
