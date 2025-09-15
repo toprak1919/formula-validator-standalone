@@ -3,7 +3,7 @@ services:
     name: formula-validator-api
     runtime: docker
     rootDir: formula-validator-standalone/backend/FormulaValidator
-    dockerfilePath: ./formula-validator-standalone/backend/FormulaValidator/Dockerfile
+    dockerfilePath: ./Dockerfile
     autoDeploy: true
     healthCheckPath: /graphql
     plan: free
