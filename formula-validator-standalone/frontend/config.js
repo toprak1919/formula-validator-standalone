@@ -10,6 +10,10 @@ const API_CONFIG = {
     // Automatically use production URL if not on localhost
     get URL() {
         const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        return isLocal ? this.LOCAL_URL : this.PRODUCTION_URL;
+        if (isLocal) return this.LOCAL_URL;
+        // Allow overriding via meta tag when deployed as a static site (e.g., Render)
+        const meta = typeof document !== 'undefined' ? document.querySelector('meta[name="backend-url"]') : null;
+        if (meta && meta.content) return meta.content;
+        return this.PRODUCTION_URL;
     }
 };

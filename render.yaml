@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: formula-validator-api
+    runtime: dotnet
+    rootDir: formula-validator-standalone/backend/FormulaValidator
+    buildCommand: |
+      dotnet restore
+      dotnet publish -c Release -o out
+    startCommand: ASPNETCORE_URLS=http://0.0.0.0:$PORT dotnet out/FormulaValidator.dll
+    autoDeploy: true
+    healthCheckPath: /graphql
+    plan: free
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+
+  - type: static
+    name: formula-validator-frontend
+    rootDir: formula-validator-standalone/frontend
+    buildCommand: |
+      BACKEND_URL=${BACKEND_URL:-https://formula-validator-api.onrender.com/graphql}
+      # Inject backend URL into a meta tag for runtime config
+      sed -i "s#</head>#  <meta name=\"backend-url\" content=\"${BACKEND_URL}\" />\n</head>#g" index.html
+    publishPath: .
+    envVars:
+      - key: BACKEND_URL
+        value: https://formula-validator-api.onrender.com/graphql
