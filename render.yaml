@@ -2,6 +2,7 @@ services:
   - type: web
     name: formula-validator-api
     runtime: docker
+    branch: custom-dsl
     rootDir: formula-validator-standalone/backend/FormulaValidator
     dockerfilePath: ./Dockerfile
     autoDeploy: true
@@ -16,6 +17,7 @@ services:
   - type: web
     name: formula-validator-frontend
     runtime: static
+    branch: custom-dsl
     rootDir: formula-validator-standalone/frontend
     buildCommand: |
       BACKEND_URL=${BACKEND_URL:-https://formula-validator-api.onrender.com/graphql}
