@@ -22,6 +22,10 @@ builder.Services
     .AddGraphQLServer()
     .AddQueryType<Query>()
     .AddMutationType<Mutation>()
+    .AddType<FormulaValidator.Models.ValidationRequest>()
+    .AddType<FormulaValidator.Models.MeasuredValue>()
+    .AddType<FormulaValidator.Models.Constant>()
+    .AddType<FormulaValidator.Models.ValidationResult>()
     .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = builder.Environment.IsDevelopment());
 
 var app = builder.Build();
