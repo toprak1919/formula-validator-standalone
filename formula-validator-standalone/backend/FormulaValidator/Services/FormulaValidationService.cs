@@ -177,6 +177,9 @@ namespace FormulaValidator.Services
             error = null;
             var pattern = new Regex(@"\$(?<name>[a-zA-Z_][a-zA-Z0-9_]*)\.(?<unit>[a-zA-Z_][a-zA-Z0-9_]*)", RegexOptions.Compiled);
 
+            // Use a local variable to capture errors inside the lambda
+            string? capturedError = null;
+
             string evaluator(Match m)
             {
                 var name = m.Groups["name"].Value;
@@ -189,20 +192,20 @@ namespace FormulaValidator.Services
 
                 if (mv == null)
                 {
-                    error = $"Undefined variable with unit: ${name}.{unit}";
+                    capturedError = $"Undefined variable with unit: ${name}.{unit}";
                     return m.Value; // keep original to avoid further issues
                 }
 
                 var fromUnit = (mv.Unit ?? string.Empty).Trim();
                 if (string.IsNullOrEmpty(fromUnit))
                 {
-                    error = $"Variable '{name}' has no unit defined but is used with '.{unit}'.";
+                    capturedError = $"Variable '{name}' has no unit defined but is used with '.{unit}'.";
                     return m.Value;
                 }
 
                 if (!UnitConverter.TryConvert(mv.Value, fromUnit, unit, out var converted))
                 {
-                    error = $"Cannot convert variable '{name}' from '{fromUnit}' to '{unit}'.";
+                    capturedError = $"Cannot convert variable '{name}' from '{fromUnit}' to '{unit}'.";
                     return m.Value;
                 }
 
@@ -214,6 +217,10 @@ namespace FormulaValidator.Services
             }
 
             var replaced = pattern.Replace(formula, new MatchEvaluator(evaluator));
+
+            // Assign the captured error to the out parameter after the lambda execution
+            error = capturedError;
+
             return replaced;
         }
 

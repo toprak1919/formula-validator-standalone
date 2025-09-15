@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formula Editor with Backend Validation</title>
+    <title>Advanced Formula Editor with Backend Validation</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -17,25 +17,28 @@
             --bg-card: rgba(255, 255, 255, 0.98);
             --bg-glass: rgba(240, 253, 244, 0.85);
             --bg-glass-hover: rgba(220, 252, 231, 0.9);
-            
+            --bg-modal: rgba(0, 0, 0, 0.5);
+
             --text-primary: #064e3b;
             --text-secondary: #047857;
             --text-muted: #059669;
-            
+
             --border-primary: rgba(16, 185, 129, 0.2);
             --border-secondary: rgba(16, 185, 129, 0.1);
             --border-focus: rgba(16, 185, 129, 0.5);
-            
+
             --accent-primary: #10b981;
             --accent-secondary: #059669;
             --accent-tertiary: #047857;
             --accent-warning: #f59e0b;
             --accent-error: #dc2626;
             --accent-success: #10b981;
-            
+            --accent-info: #3b82f6;
+
             --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
             --shadow-md: 0 4px 6px rgba(16, 185, 129, 0.1);
             --shadow-lg: 0 10px 15px rgba(16, 185, 129, 0.15);
+            --shadow-xl: 0 20px 25px rgba(16, 185, 129, 0.2);
         }
 
         * {
@@ -56,7 +59,7 @@
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
             background: var(--bg-card);
             border-radius: 16px;
@@ -78,12 +81,29 @@
             }
         }
 
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
         .header {
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: white;
             padding: 24px 32px;
             border-bottom: 1px solid var(--border-primary);
             box-shadow: 0 2px 4px rgba(16, 185, 129, 0.1);
+            position: relative;
         }
 
         .header h1 {
@@ -98,11 +118,82 @@
             color: rgba(255, 255, 255, 0.9);
         }
 
+        .toolbar {
+            background: var(--bg-glass);
+            border-bottom: 1px solid var(--border-secondary);
+            padding: 12px 24px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn {
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn:hover {
+            background: var(--accent-secondary);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn.btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-primary);
+        }
+
+        .btn.btn-secondary:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .btn.btn-danger {
+            background: var(--accent-error);
+        }
+
+        .btn.btn-danger:hover {
+            background: #b91c1c;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 4px;
+            margin-left: auto;
+        }
+
         .main-content {
             display: grid;
-            grid-template-columns: 300px 1fr 350px;
+            grid-template-columns: 320px 1fr 380px;
             gap: 24px;
             padding: 24px;
+        }
+
+        @media (max-width: 1400px) {
+            .main-content {
+                grid-template-columns: 280px 1fr 320px;
+            }
         }
 
         @media (max-width: 1200px) {
@@ -117,6 +208,7 @@
             padding: 20px;
             border: 1px solid var(--border-secondary);
             backdrop-filter: blur(10px);
+            animation: slideIn 0.6s ease;
         }
 
         .panel-title {
@@ -126,22 +218,60 @@
             color: var(--text-primary);
             display: flex;
             align-items: center;
+            justify-content: space-between;
+        }
+
+        .panel-title-text {
+            display: flex;
+            align-items: center;
             gap: 8px;
         }
 
-        .panel-title .icon {
-            width: 20px;
-            height: 20px;
+        .panel-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            border: 1px solid var(--border-secondary);
+            background: var(--bg-secondary);
+            cursor: pointer;
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.2s ease;
             font-size: 14px;
+        }
+
+        .icon-btn:hover {
+            background: var(--bg-glass-hover);
+            border-color: var(--accent-primary);
         }
 
         .source-list {
             display: flex;
             flex-direction: column;
             gap: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .source-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .source-list::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+        }
+
+        .source-list::-webkit-scrollbar-thumb {
+            background: var(--accent-primary);
+            border-radius: 3px;
         }
 
         .source-item {
@@ -177,14 +307,33 @@
             background: var(--accent-primary);
         }
 
+        .source-item.editing {
+            background: var(--bg-tertiary);
+            cursor: default;
+        }
+
+        .source-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
         .source-name {
             font-size: 14px;
             font-weight: 500;
             color: var(--text-primary);
-            margin-bottom: 4px;
+        }
+
+        .source-actions {
             display: flex;
-            align-items: center;
-            gap: 8px;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .source-item:hover .source-actions {
+            opacity: 1;
         }
 
         .source-code {
@@ -199,13 +348,86 @@
             color: var(--text-muted);
         }
 
+        .source-edit-form {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .input-group label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-group input {
+            padding: 6px 10px;
+            border: 1px solid var(--border-secondary);
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: inherit;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .edit-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .search-box {
+            margin-bottom: 12px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 8px 12px 8px 32px;
+            border: 1px solid var(--border-secondary);
+            border-radius: 8px;
+            font-size: 13px;
+            background: var(--bg-secondary);
+            transition: all 0.2s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .search-box::before {
+            content: '🔍';
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+        }
+
         .editor-container {
             position: relative;
         }
 
         #editor {
             width: 100%;
-            height: 300px;
+            height: 400px;
             border-radius: 12px;
             border: 2px solid var(--border-primary);
             font-family: 'JetBrains Mono', monospace;
@@ -216,6 +438,77 @@
         #editor:focus {
             border-color: var(--accent-primary);
             box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        /* ACE Editor text visibility fix */
+        .ace_editor {
+            background-color: var(--bg-secondary) !important;
+            color: var(--text-primary) !important;
+        }
+
+        .ace_editor .ace_text-layer {
+            color: var(--text-primary) !important;
+        }
+
+        .ace_editor .ace_cursor {
+            color: var(--text-primary) !important;
+            border-color: var(--text-primary) !important;
+        }
+
+        .ace_editor .ace_content {
+            color: var(--text-primary) !important;
+        }
+
+        .ace_editor .ace_gutter {
+            background: var(--bg-tertiary) !important;
+            color: var(--text-muted) !important;
+        }
+
+        .ace_editor .ace_gutter-active-line {
+            background: rgba(16, 185, 129, 0.1) !important;
+        }
+
+        .ace_editor .ace_marker-layer .ace_selection {
+            background: rgba(16, 185, 129, 0.2) !important;
+        }
+
+        .ace_editor .ace_marker-layer .ace_active-line {
+            background: rgba(16, 185, 129, 0.05) !important;
+        }
+
+        /* Variable and constant highlighting */
+        /* Note: Custom syntax highlighting for $ and # is disabled due to ACE compatibility */
+        /* These styles are kept for future use if we implement a custom mode */
+        .ace_editor .ace_variable.ace_language {
+            color: var(--accent-primary) !important;
+            font-weight: 600;
+        }
+
+        .ace_editor .ace_constant.ace_language {
+            color: var(--accent-secondary) !important;
+            font-weight: 600;
+        }
+
+        /* Autocomplete dropdown */
+        .ace_editor.ace_autocomplete {
+            background: var(--bg-secondary) !important;
+            border: 1px solid var(--border-primary) !important;
+            border-radius: 8px !important;
+            box-shadow: var(--shadow-lg) !important;
+            color: var(--text-primary) !important;
+        }
+
+        .ace_editor.ace_autocomplete .ace_marker-layer .ace_active-line {
+            background: rgba(16, 185, 129, 0.1) !important;
+        }
+
+        .ace_editor.ace_autocomplete .ace_line-hover {
+            background: rgba(16, 185, 129, 0.05) !important;
+        }
+
+        .ace_editor.ace_autocomplete .ace_completion-highlight {
+            color: var(--accent-primary) !important;
+            font-weight: bold;
         }
 
         .validation-status {
@@ -269,6 +562,7 @@
             border-radius: 8px;
             padding: 12px;
             display: none;
+            animation: slideIn 0.3s ease;
         }
 
         .errors-container.show {
@@ -278,10 +572,18 @@
         .error-item {
             color: var(--accent-error);
             font-size: 13px;
-            margin-bottom: 4px;
+            margin-bottom: 8px;
             display: flex;
             align-items: start;
             gap: 8px;
+            padding: 8px;
+            background: rgba(220, 38, 38, 0.05);
+            border-radius: 6px;
+            border-left: 3px solid var(--accent-error);
+        }
+
+        .error-item:last-child {
+            margin-bottom: 0;
         }
 
         .error-icon {
@@ -317,9 +619,144 @@
 
         .result-value {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 20px;
+            font-size: 24px;
             font-weight: 600;
             color: var(--accent-primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .result-copy {
+            font-size: 14px;
+            padding: 4px 8px;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.2s ease;
+        }
+
+        .result-copy:hover {
+            opacity: 1;
+        }
+
+        .formula-history {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-secondary);
+        }
+
+        .history-title {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            padding: 6px 10px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-secondary);
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-item:hover {
+            background: var(--bg-glass-hover);
+            border-color: var(--accent-primary);
+        }
+
+        .history-result {
+            color: var(--text-muted);
+            font-size: 11px;
+        }
+
+        .functions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .function-item {
+            padding: 8px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-secondary);
+            border-radius: 6px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .function-item:hover {
+            background: var(--bg-glass-hover);
+            border-color: var(--accent-primary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .function-name {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .function-desc {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid var(--border-secondary);
+        }
+
+        .tab {
+            padding: 8px 16px;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tab:hover {
+            color: var(--text-secondary);
+        }
+
+        .tab.active {
+            color: var(--accent-primary);
+            border-bottom-color: var(--accent-primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
         }
 
         .loading-spinner {
@@ -350,57 +787,416 @@
             align-items: center;
             gap: 8px;
             box-shadow: var(--shadow-md);
+            backdrop-filter: blur(10px);
         }
 
         .backend-indicator.active {
             border-color: var(--accent-primary);
             background: rgba(16, 185, 129, 0.1);
+            animation: pulse 2s infinite;
         }
 
-        .btn {
+        .backend-indicator .request-count {
             background: var(--accent-primary);
             color: white;
-            border: none;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-modal);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-xl);
+            animation: slideIn 0.3s ease;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-secondary);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
             border-radius: 8px;
-            padding: 10px 20px;
-            font-size: 14px;
-            font-weight: 500;
+            border: 1px solid var(--border-secondary);
+            background: var(--bg-tertiary);
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             transition: all 0.2s ease;
+            font-size: 18px;
         }
 
-        .btn:hover {
+        .modal-close:hover {
+            background: var(--bg-glass-hover);
+            border-color: var(--accent-primary);
+        }
+
+        .test-controls {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+
+        .test-speed {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-left: auto;
+        }
+
+        .test-speed label {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .test-speed select {
+            padding: 6px 10px;
+            border: 1px solid var(--border-secondary);
+            border-radius: 6px;
+            font-size: 13px;
+            background: var(--bg-tertiary);
+        }
+
+        .test-progress {
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .test-results {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .test-result {
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-secondary);
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .test-result.pass {
+            background: rgba(16, 185, 129, 0.05);
+            border-color: var(--accent-success);
+        }
+
+        .test-result.fail {
+            background: rgba(220, 38, 38, 0.05);
+            border-color: var(--accent-error);
+        }
+
+        .test-info {
+            flex: 1;
+        }
+
+        .test-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .test-formula {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .test-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .test-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .test-icon.pass {
+            background: var(--accent-success);
+            color: white;
+        }
+
+        .test-icon.fail {
+            background: var(--accent-error);
+            color: white;
+        }
+
+        .test-expected {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .toast {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-primary);
+            border-radius: 8px;
+            padding: 12px 16px;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 300px;
+            animation: slideIn 0.3s ease;
+        }
+
+        .toast.success {
+            border-color: var(--accent-success);
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+        }
+
+        .toast.error {
+            border-color: var(--accent-error);
+            background: linear-gradient(135deg, rgba(220, 38, 38, 0.1), rgba(220, 38, 38, 0.05));
+        }
+
+        .toast.info {
+            border-color: var(--accent-info);
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05));
+        }
+
+        .toast-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .toast.success .toast-icon {
+            background: var(--accent-success);
+            color: white;
+        }
+
+        .toast.error .toast-icon {
+            background: var(--accent-error);
+            color: white;
+        }
+
+        .toast.info .toast-icon {
+            background: var(--accent-info);
+            color: white;
+        }
+
+        .toast-message {
+            flex: 1;
+            font-size: 13px;
+            color: var(--text-primary);
+        }
+
+        .toast-close {
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.2s ease;
+        }
+
+        .toast-close:hover {
+            opacity: 1;
+        }
+
+        /* Glassmorphism effects */
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-primary);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
             background: var(--accent-secondary);
-            transform: translateY(-1px);
-            box-shadow: var(--shadow-md);
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>Formula Editor with Backend Validation (mXparser)</h1>
-            <p>Real-time formula validation and evaluation using mXparser on the backend</p>
+            <h1>Advanced Formula Editor with Backend Validation (mXparser)</h1>
+            <p>Professional formula validation and evaluation with advanced features</p>
         </div>
-        
-        <div class="main-content">
-            <div class="panel">
-                <div class="panel-title">
-                    <span class="icon">📊</span>
-                    Measured Values
-                </div>
-                <div class="source-list" id="measuredValuesList"></div>
+
+        <div class="toolbar">
+            <button class="btn" id="validateBtn">
+                <span>⚡</span>
+                Validate
+            </button>
+            <button class="btn btn-secondary" id="clearBtn">
+                <span>🗑️</span>
+                Clear
+            </button>
+            <button class="btn btn-secondary" id="samplesBtn">
+                <span>📝</span>
+                Samples
+            </button>
+            <button class="btn btn-secondary" id="testSuiteBtn">
+                <span>🧪</span>
+                Test Suite
+            </button>
+            <button class="btn btn-secondary" id="copyFormulaBtn">
+                <span>📋</span>
+                Copy Formula
+            </button>
+            <button class="btn btn-secondary" id="copyResultBtn">
+                <span>📊</span>
+                Copy Result
+            </button>
+            <div class="btn-group">
+                <button class="btn btn-secondary" id="simulateChangeBtn">
+                    <span>🔄</span>
+                    Simulate Changes
+                </button>
             </div>
-            
+        </div>
+
+        <div class="main-content">
+            <!-- Left Panel - Sources -->
+            <div class="panel">
+                <div class="tabs">
+                    <button class="tab active" data-tab="measured">Measured Values</button>
+                    <button class="tab" data-tab="constants">Constants</button>
+                </div>
+
+                <div class="tab-content active" id="measuredTab">
+                    <div class="panel-title">
+                        <div class="panel-title-text">
+                            <span>📊</span>
+                            Measured Values
+                        </div>
+                        <div class="panel-actions">
+                            <button class="icon-btn" id="addMeasuredBtn" title="Add New">+</button>
+                        </div>
+                    </div>
+                    <div class="search-box">
+                        <input type="text" placeholder="Search measured values..." id="measuredSearch">
+                    </div>
+                    <div class="source-list" id="measuredValuesList"></div>
+                </div>
+
+                <div class="tab-content" id="constantsTab">
+                    <div class="panel-title">
+                        <div class="panel-title-text">
+                            <span>🔢</span>
+                            Constants
+                        </div>
+                        <div class="panel-actions">
+                            <button class="icon-btn" id="addConstantBtn" title="Add New">+</button>
+                        </div>
+                    </div>
+                    <div class="search-box">
+                        <input type="text" placeholder="Search constants..." id="constantsSearch">
+                    </div>
+                    <div class="source-list" id="constantsList"></div>
+                </div>
+            </div>
+
+            <!-- Center Panel - Editor -->
             <div class="panel">
                 <div class="panel-title">
-                    <span class="icon">✏️</span>
-                    Formula Editor
+                    <div class="panel-title-text">
+                        <span>✏️</span>
+                        Formula Editor
+                    </div>
                 </div>
                 <div class="editor-container">
                     <div class="validation-status" id="validationStatus">
@@ -414,40 +1210,114 @@
                 </div>
                 <div class="result-section">
                     <div class="result-label">Calculation Result</div>
-                    <div class="result-value" id="resultValue">Enter a formula...</div>
+                    <div class="result-value">
+                        <span id="resultValue">Enter a formula...</span>
+                        <button class="btn btn-secondary result-copy" id="resultCopyBtn">📋</button>
+                    </div>
+                </div>
+                <div class="formula-history">
+                    <div class="history-title">Formula History</div>
+                    <div class="history-list" id="historyList"></div>
                 </div>
             </div>
-            
+
+            <!-- Right Panel - Functions -->
             <div class="panel">
                 <div class="panel-title">
-                    <span class="icon">🔢</span>
-                    Constants
+                    <div class="panel-title-text">
+                        <span>🔧</span>
+                        Functions
+                    </div>
                 </div>
-                <div class="source-list" id="constantsList"></div>
+                <div class="tabs">
+                    <button class="tab active" data-tab="basic-func">Basic</button>
+                    <button class="tab" data-tab="trig-func">Trigonometric</button>
+                    <button class="tab" data-tab="math-func">Mathematical</button>
+                    <button class="tab" data-tab="stat-func">Statistical</button>
+                </div>
+                <div class="tab-content active" id="basic-funcTab">
+                    <div class="functions-grid" id="basicFunctions"></div>
+                </div>
+                <div class="tab-content" id="trig-funcTab">
+                    <div class="functions-grid" id="trigFunctions"></div>
+                </div>
+                <div class="tab-content" id="math-funcTab">
+                    <div class="functions-grid" id="mathFunctions"></div>
+                </div>
+                <div class="tab-content" id="stat-funcTab">
+                    <div class="functions-grid" id="statFunctions"></div>
+                </div>
             </div>
         </div>
     </div>
-    
+
+    <!-- Backend Indicator -->
     <div class="backend-indicator" id="backendIndicator">
         <span>Backend: Ready</span>
+        <span class="request-count" id="requestCount">0</span>
     </div>
 
+    <!-- Test Suite Modal -->
+    <div class="modal" id="testModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Formula Test Suite</h2>
+                <button class="modal-close" id="closeTestModal">✕</button>
+            </div>
+            <div class="test-controls">
+                <button class="btn" id="runTestsBtn">Run All Tests</button>
+                <button class="btn btn-secondary" id="exportTestsBtn">Export Results</button>
+                <div class="test-speed">
+                    <label>Speed:</label>
+                    <select id="testSpeed">
+                        <option value="instant">Instant</option>
+                        <option value="fast">Fast</option>
+                        <option value="normal">Normal</option>
+                    </select>
+                </div>
+            </div>
+            <div class="test-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="testProgress" style="width: 0%"></div>
+                </div>
+                <div class="progress-stats">
+                    <span id="testProgressText">0 / 0 tests</span>
+                    <span id="testStats">Pass: 0 | Fail: 0</span>
+                </div>
+            </div>
+            <div class="test-results" id="testResults"></div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
     <!-- ACE Editor -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/mode-javascript.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/theme-tomorrow.js"></script>
-    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/ace.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/ext-language_tools.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/theme-github.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/mode-javascript.min.js"></script>
+
     <script>
+        // Application State
+        let editor;
+        let validationTimeout;
+        let requestCount = 0;
+        let formulaHistory = [];
+        let testCases = [];
+        let currentTestIndex = 0;
+        let testRunning = false;
+
         // Data sources
-        const measuredValues = {
-            '$temperature': { name: 'Temperature', value: 25.5 },
+        let measuredValues = {
+            '$temperature': { name: 'Temperature', value: 25.5, unit: 'meter' },
             '$pressure': { name: 'Pressure', value: 101.3 },
             '$humidity': { name: 'Humidity', value: 65.2 },
             '$flow_rate': { name: 'Flow Rate', value: 12.8 },
             '$voltage': { name: 'Voltage', value: 220.0 }
         };
 
-        const constants = {
+        let constants = {
             '#pi': { name: 'Pi', value: 3.14159 },
             '#gravity': { name: 'Gravity', value: 9.81 },
             '#max_temp': { name: 'Max Temperature', value: 100.0 },
@@ -455,20 +1325,115 @@
             '#conversion_factor': { name: 'Conversion Factor', value: 1.8 }
         };
 
-        let editor;
-        let validationTimeout;
-        const DEBOUNCE_DELAY = 300; // 300ms debounce
+        // Functions database
+        const functionsDB = {
+            basic: [
+                { name: 'abs(x)', desc: 'Absolute value' },
+                { name: 'sign(x)', desc: 'Sign function' },
+                { name: 'sgn(x)', desc: 'Signum' },
+                { name: 'mod(x,y)', desc: 'Modulo' },
+                { name: 'fact(n)', desc: 'Factorial' },
+                { name: 'gcd(a,b)', desc: 'GCD' },
+                { name: 'lcm(a,b)', desc: 'LCM' }
+            ],
+            trig: [
+                { name: 'sin(x)', desc: 'Sine' },
+                { name: 'cos(x)', desc: 'Cosine' },
+                { name: 'tan(x)', desc: 'Tangent' },
+                { name: 'asin(x)', desc: 'Arcsine' },
+                { name: 'acos(x)', desc: 'Arccosine' },
+                { name: 'atan(x)', desc: 'Arctangent' },
+                { name: 'sinh(x)', desc: 'Hyperbolic sine' },
+                { name: 'cosh(x)', desc: 'Hyperbolic cos' },
+                { name: 'tanh(x)', desc: 'Hyperbolic tan' }
+            ],
+            math: [
+                { name: 'sqrt(x)', desc: 'Square root' },
+                { name: 'exp(x)', desc: 'Exponential' },
+                { name: 'ln(x)', desc: 'Natural log' },
+                { name: 'log10(x)', desc: 'Log base 10' },
+                { name: 'log2(x)', desc: 'Log base 2' },
+                { name: 'pow(x,y)', desc: 'Power x^y' },
+                { name: 'floor(x)', desc: 'Floor' },
+                { name: 'ceil(x)', desc: 'Ceiling' },
+                { name: 'round(x,n)', desc: 'Round' }
+            ],
+            stat: [
+                { name: 'min(...)', desc: 'Minimum' },
+                { name: 'max(...)', desc: 'Maximum' },
+                { name: 'avg(...)', desc: 'Average' },
+                { name: 'sum(...)', desc: 'Sum' },
+                { name: 'prod(...)', desc: 'Product' },
+                { name: 'std(...)', desc: 'Std deviation' },
+                { name: 'var(...)', desc: 'Variance' }
+            ]
+        };
 
+        // Initialize ACE Editor
         function initializeEditor() {
             editor = ace.edit("editor");
-            editor.setTheme("ace/theme/tomorrow");
+            editor.setTheme("ace/theme/github");
             editor.session.setMode("ace/mode/javascript");
+
+            // Enable language tools
+            ace.require("ace/ext/language_tools");
+
             editor.setOptions({
                 fontSize: "15px",
-                showGutter: false,
+                showGutter: true,
                 highlightActiveLine: true,
-                wrap: true
+                wrap: true,
+                enableBasicAutocompletion: true,
+                enableSnippets: true,
+                enableLiveAutocompletion: true,
+                showPrintMargin: false
             });
+
+            // Custom syntax highlighting for $ and #
+            // Removed due to compatibility issues with ACE v1.32.2
+            // This was causing "Cannot read properties of undefined" errors
+            // Variables ($) and constants (#) still work in autocomplete
+
+            // Custom autocomplete
+            const customCompleter = {
+                getCompletions: function(editor, session, pos, prefix, callback) {
+                    const completions = [];
+
+                    // Add measured values
+                    Object.entries(measuredValues).forEach(([key, data]) => {
+                        completions.push({
+                            caption: key,
+                            value: key,
+                            meta: `Value: ${data.value}`,
+                            score: 1000
+                        });
+                    });
+
+                    // Add constants
+                    Object.entries(constants).forEach(([key, data]) => {
+                        completions.push({
+                            caption: key,
+                            value: key,
+                            meta: `Value: ${data.value}`,
+                            score: 900
+                        });
+                    });
+
+                    // Add functions
+                    [...functionsDB.basic, ...functionsDB.trig, ...functionsDB.math, ...functionsDB.stat].forEach(func => {
+                        completions.push({
+                            caption: func.name,
+                            value: func.name.split('(')[0] + '(',
+                            meta: func.desc,
+                            score: 800
+                        });
+                    });
+
+                    callback(null, completions);
+                }
+            };
+
+            editor.completers = [customCompleter];
 
             // Set initial value
             editor.setValue("($temperature * #conversion_factor) + 32", 1);
@@ -476,42 +1441,151 @@
             // Add change listener with debouncing
             editor.session.on('change', () => {
                 clearTimeout(validationTimeout);
-                validationTimeout = setTimeout(performBackendValidation, DEBOUNCE_DELAY);
-                
-                // Show validating status immediately
+                validationTimeout = setTimeout(performBackendValidation, 300);
                 updateValidationStatus('validating');
             });
         }
 
+        // Render source lists
         function renderSourceLists() {
-            // Render measured values
-            const measuredList = document.getElementById('measuredValuesList');
-            measuredList.innerHTML = '';
-            Object.entries(measuredValues).forEach(([key, data]) => {
-                const item = document.createElement('div');
-                item.className = 'source-item';
-                item.innerHTML = `
+            renderMeasuredValues();
+            renderConstants();
+        }
+
+        function renderMeasuredValues(searchTerm = '') {
+            const list = document.getElementById('measuredValuesList');
+            list.innerHTML = '';
+
+            Object.entries(measuredValues)
+                .filter(([key, data]) =>
+                    key.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    data.name.toLowerCase().includes(searchTerm.toLowerCase())
+                )
+                .forEach(([key, data]) => {
+                    const item = createSourceItem(key, data, 'measured');
+                    list.appendChild(item);
+                });
+        }
+
+        function renderConstants(searchTerm = '') {
+            const list = document.getElementById('constantsList');
+            list.innerHTML = '';
+
+            Object.entries(constants)
+                .filter(([key, data]) =>
+                    key.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    data.name.toLowerCase().includes(searchTerm.toLowerCase())
+                )
+                .forEach(([key, data]) => {
+                    const item = createSourceItem(key, data, 'constant');
+                    list.appendChild(item);
+                });
+        }
+
+        function createSourceItem(key, data, type) {
+            const item = document.createElement('div');
+            item.className = 'source-item';
+            item.dataset.key = key;
+
+            item.innerHTML = `
+                <div class="source-header">
                     <div class="source-name">${data.name}</div>
-                    <div class="source-code">${key}</div>
-                    <div class="source-value">Value: ${data.value}</div>
-                `;
-                item.onclick = () => insertIntoEditor(key);
-                measuredList.appendChild(item);
+                    <div class="source-actions">
+                        <button class="icon-btn edit-btn" title="Edit">✏️</button>
+                        <button class="icon-btn delete-btn" title="Delete">🗑️</button>
+                    </div>
+                </div>
+                <div class="source-code">${key}</div>
+                <div class="source-value">Value: ${data.value}${data.unit ? ' (' + data.unit + ')' : ''}</div>
+            `;
+
+            // Click to insert
+            item.addEventListener('click', (e) => {
+                if (!e.target.closest('.source-actions') && !item.classList.contains('editing')) {
+                    insertIntoEditor(key);
+                    item.classList.add('active');
+                    setTimeout(() => item.classList.remove('active'), 500);
+                }
             });
 
-            // Render constants
-            const constantsList = document.getElementById('constantsList');
-            constantsList.innerHTML = '';
-            Object.entries(constants).forEach(([key, data]) => {
-                const item = document.createElement('div');
-                item.className = 'source-item';
-                item.innerHTML = `
-                    <div class="source-name">${data.name}</div>
-                    <div class="source-code">${key}</div>
-                    <div class="source-value">Value: ${data.value}</div>
-                `;
-                item.onclick = () => insertIntoEditor(key);
-                constantsList.appendChild(item);
+            // Edit button
+            item.querySelector('.edit-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                showEditForm(item, key, data, type);
+            });
+
+            // Delete button
+            item.querySelector('.delete-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (confirm(`Delete ${data.name}?`)) {
+                    if (type === 'measured') {
+                        delete measuredValues[key];
+                        renderMeasuredValues();
+                    } else {
+                        delete constants[key];
+                        renderConstants();
+                    }
+                    showToast(`${data.name} deleted`, 'info');
+                    performBackendValidation();
+                }
+            });
+
+            return item;
+        }
+
+        function showEditForm(item, key, data, type) {
+            item.classList.add('editing');
+
+            const form = document.createElement('div');
+            form.className = 'source-edit-form';
+            form.innerHTML = `
+                <div class="input-group">
+                    <label>Name</label>
+                    <input type="text" value="${data.name}" id="editName">
+                </div>
+                <div class="input-group">
+                    <label>Value</label>
+                    <input type="number" value="${data.value}" step="any" id="editValue">
+                </div>
+                ${type === 'measured' ? `
+                <div class="input-group">
+                    <label>Unit (optional)</label>
+                    <input type="text" value="${data.unit || ''}" id="editUnit">
+                </div>
+                ` : ''}
+                <div class="edit-actions">
+                    <button class="btn btn-secondary" id="saveEdit">Save</button>
+                    <button class="btn btn-secondary" id="cancelEdit">Cancel</button>
+                </div>
+            `;
+
+            item.appendChild(form);
+
+            form.querySelector('#saveEdit').addEventListener('click', () => {
+                const newData = {
+                    name: form.querySelector('#editName').value,
+                    value: parseFloat(form.querySelector('#editValue').value)
+                };
+
+                if (type === 'measured') {
+                    const unitInput = form.querySelector('#editUnit');
+                    if (unitInput && unitInput.value) {
+                        newData.unit = unitInput.value;
+                    }
+                    measuredValues[key] = newData;
+                    renderMeasuredValues();
+                } else {
+                    constants[key] = newData;
+                    renderConstants();
+                }
+
+                showToast(`${newData.name} updated`, 'success');
+                performBackendValidation();
+            });
+
+            form.querySelector('#cancelEdit').addEventListener('click', () => {
+                item.classList.remove('editing');
+                form.remove();
             });
         }
 
@@ -520,10 +1594,11 @@
             editor.focus();
         }
 
+        // Validation functions
         function updateValidationStatus(status, message = '') {
             const statusEl = document.getElementById('validationStatus');
             statusEl.className = `validation-status ${status}`;
-            
+
             switch(status) {
                 case 'valid':
                     statusEl.innerHTML = '<span class="status-icon">✓</span><span>Valid</span>';
@@ -542,7 +1617,7 @@
         function showErrors(errors) {
             const errorsContainer = document.getElementById('errorsContainer');
             const errorsList = document.getElementById('errorsList');
-            
+
             if (errors && errors.length > 0) {
                 errorsList.innerHTML = errors.map(error => `
                     <div class="error-item">
@@ -559,8 +1634,7 @@
         function updateResult(value) {
             const resultEl = document.getElementById('resultValue');
             if (value !== null && value !== undefined) {
-                // Format the number nicely
-                const formatted = typeof value === 'number' ? value.toFixed(4) : value;
+                const formatted = typeof value === 'number' ? value.toFixed(6) : value;
                 resultEl.textContent = formatted;
             } else {
                 resultEl.textContent = 'Enter a valid formula...';
@@ -570,12 +1644,17 @@
         function updateBackendIndicator(active, message = 'Ready') {
             const indicator = document.getElementById('backendIndicator');
             indicator.className = `backend-indicator ${active ? 'active' : ''}`;
-            indicator.innerHTML = `<span>Backend: ${message}</span>`;
+            indicator.querySelector('span:first-child').textContent = `Backend: ${message}`;
+
+            if (active) {
+                requestCount++;
+                document.getElementById('requestCount').textContent = requestCount;
+            }
         }
 
         async function performBackendValidation() {
             const formula = editor.getValue();
-            
+
             if (!formula || formula.trim() === '') {
                 updateValidationStatus('');
                 showErrors([]);
@@ -585,13 +1664,13 @@
 
             updateBackendIndicator(true, 'Validating...');
 
-            // Prepare request data
             const requestData = {
                 formula: formula,
                 measuredValues: Object.entries(measuredValues).map(([id, data]) => ({
                     id: id,
                     name: data.name,
-                    value: data.value
+                    value: data.value,
+                    unit: data.unit
                 })),
                 constants: Object.entries(constants).map(([id, data]) => ({
                     id: id,
@@ -601,7 +1680,6 @@
             };
 
             try {
-                // Send GraphQL request to backend
                 const response = await fetch(API_CONFIG.URL, {
                     method: 'POST',
                     headers: {
@@ -626,7 +1704,7 @@
                 });
 
                 const data = await response.json();
-                
+
                 if (data.errors) {
                     console.error('GraphQL errors:', data.errors);
                     updateValidationStatus('error');
@@ -637,30 +1715,36 @@
                 }
 
                 const validationResult = data.data.validateFormula;
-                
+
                 if (validationResult.isValid) {
                     updateValidationStatus('valid');
                     showErrors([]);
                     updateResult(validationResult.result);
-                    
-                    // Clear any ACE editor annotations
+
+                    // Add to history
+                    addToHistory(formula, validationResult.result);
+
+                    // Clear ACE editor annotations
                     editor.session.clearAnnotations();
                 } else {
                     updateValidationStatus('error');
-                    showErrors([validationResult.error || 'Invalid formula']);
+
+                    // Parse error for better display
+                    const error = validationResult.error || 'Invalid formula';
+                    showErrors([error]);
                     updateResult(null);
-                    
+
                     // Add error annotation to ACE editor
                     editor.session.setAnnotations([{
                         row: 0,
                         column: 0,
-                        text: validationResult.error || 'Invalid formula',
+                        text: error,
                         type: "error"
                     }]);
                 }
-                
+
                 updateBackendIndicator(false, 'Ready');
-                
+
             } catch (error) {
                 console.error('Validation error:', error);
                 updateValidationStatus('error');
@@ -670,13 +1754,417 @@
             }
         }
 
-        // Initialize the application
-        document.addEventListener('DOMContentLoaded', () => {
+        // History management
+        function addToHistory(formula, result) {
+            formulaHistory.unshift({ formula, result });
+            if (formulaHistory.length > 10) {
+                formulaHistory.pop();
+            }
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const historyList = document.getElementById('historyList');
+            historyList.innerHTML = '';
+
+            formulaHistory.forEach(item => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                historyItem.innerHTML = `
+                    <span>${item.formula}</span>
+                    <span class="history-result">= ${item.result?.toFixed(4) || 'Error'}</span>
+                `;
+                historyItem.addEventListener('click', () => {
+                    editor.setValue(item.formula, 1);
+                });
+                historyList.appendChild(historyItem);
+            });
+        }
+
+        // Functions panel
+        function renderFunctions() {
+            renderFunctionCategory('basicFunctions', functionsDB.basic);
+            renderFunctionCategory('trigFunctions', functionsDB.trig);
+            renderFunctionCategory('mathFunctions', functionsDB.math);
+            renderFunctionCategory('statFunctions', functionsDB.stat);
+        }
+
+        function renderFunctionCategory(elementId, functions) {
+            const container = document.getElementById(elementId);
+            container.innerHTML = '';
+
+            functions.forEach(func => {
+                const item = document.createElement('div');
+                item.className = 'function-item';
+                item.innerHTML = `
+                    <div class="function-name">${func.name}</div>
+                    <div class="function-desc">${func.desc}</div>
+                `;
+                item.addEventListener('click', () => {
+                    const funcName = func.name.split('(')[0] + '(';
+                    insertIntoEditor(funcName);
+                });
+                container.appendChild(item);
+            });
+        }
+
+        // Test Suite
+        async function loadTestCases() {
+            try {
+                const response = await fetch('test-cases.json');
+                const data = await response.json();
+                testCases = data.testCases;
+
+                // Update sources from test data
+                if (data.measuredValues) {
+                    measuredValues = data.measuredValues;
+                    renderMeasuredValues();
+                }
+                if (data.constants) {
+                    constants = data.constants;
+                    renderConstants();
+                }
+            } catch (error) {
+                console.error('Failed to load test cases:', error);
+                testCases = [];
+            }
+        }
+
+        async function runTests() {
+            if (testRunning) return;
+
+            testRunning = true;
+            currentTestIndex = 0;
+            const results = [];
+            const testSpeed = document.getElementById('testSpeed').value;
+            const delay = testSpeed === 'instant' ? 0 : testSpeed === 'fast' ? 100 : 500;
+
+            document.getElementById('testResults').innerHTML = '';
+            document.getElementById('runTestsBtn').disabled = true;
+
+            for (let i = 0; i < testCases.length; i++) {
+                const testCase = testCases[i];
+                const result = await runSingleTest(testCase);
+                results.push(result);
+
+                updateTestProgress(i + 1, testCases.length, results);
+                renderTestResult(result);
+
+                if (delay > 0) {
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+
+            testRunning = false;
+            document.getElementById('runTestsBtn').disabled = false;
+
+            const passed = results.filter(r => r.passed).length;
+            const failed = results.filter(r => !r.passed).length;
+            showToast(`Test suite completed: ${passed} passed, ${failed} failed`,
+                      failed > 0 ? 'error' : 'success');
+        }
+
+        async function runSingleTest(testCase) {
+            const requestData = {
+                formula: testCase.formula,
+                measuredValues: Object.entries(measuredValues).map(([id, data]) => ({
+                    id: id,
+                    name: data.name,
+                    value: data.value,
+                    unit: data.unit
+                })),
+                constants: Object.entries(constants).map(([id, data]) => ({
+                    id: id,
+                    name: data.name,
+                    value: data.value
+                }))
+            };
+
+            try {
+                const response = await fetch(API_CONFIG.URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: `
+                            mutation ValidateFormula($request: ValidationRequestInput!) {
+                                validateFormula(request: $request) {
+                                    isValid
+                                    error
+                                    result
+                                    evaluatedFormula
+                                    source
+                                }
+                            }
+                        `,
+                        variables: {
+                            request: requestData
+                        }
+                    })
+                });
+
+                const data = await response.json();
+                const validationResult = data.data.validateFormula;
+
+                if (testCase.expectedError) {
+                    return {
+                        ...testCase,
+                        passed: !validationResult.isValid,
+                        actual: validationResult.error || 'No error',
+                        expected: testCase.expectedError
+                    };
+                } else {
+                    const passed = validationResult.isValid &&
+                                   Math.abs(validationResult.result - testCase.expectedResult) < 0.001;
+                    return {
+                        ...testCase,
+                        passed,
+                        actual: validationResult.result,
+                        expected: testCase.expectedResult
+                    };
+                }
+            } catch (error) {
+                return {
+                    ...testCase,
+                    passed: false,
+                    actual: 'Network error',
+                    expected: testCase.expectedResult || testCase.expectedError
+                };
+            }
+        }
+
+        function updateTestProgress(current, total, results) {
+            const progress = (current / total) * 100;
+            document.getElementById('testProgress').style.width = `${progress}%`;
+            document.getElementById('testProgressText').textContent = `${current} / ${total} tests`;
+
+            const passed = results.filter(r => r.passed).length;
+            const failed = results.filter(r => !r.passed).length;
+            document.getElementById('testStats').textContent = `Pass: ${passed} | Fail: ${failed}`;
+        }
+
+        function renderTestResult(result) {
+            const container = document.getElementById('testResults');
+            const item = document.createElement('div');
+            item.className = `test-result ${result.passed ? 'pass' : 'fail'}`;
+            item.innerHTML = `
+                <div class="test-info">
+                    <div class="test-name">${result.name}</div>
+                    <div class="test-formula">${result.formula}</div>
+                </div>
+                <div class="test-status">
+                    <div class="test-expected">
+                        Expected: ${result.expected}<br>
+                        Actual: ${result.actual}
+                    </div>
+                    <div class="test-icon ${result.passed ? 'pass' : 'fail'}">
+                        ${result.passed ? '✓' : '✗'}
+                    </div>
+                </div>
+            `;
+            container.appendChild(item);
+        }
+
+        function exportTestResults() {
+            const results = Array.from(document.querySelectorAll('.test-result')).map(el => {
+                const name = el.querySelector('.test-name').textContent;
+                const formula = el.querySelector('.test-formula').textContent;
+                const expected = el.querySelector('.test-expected').textContent;
+                const passed = el.classList.contains('pass');
+                return { name, formula, expected, passed };
+            });
+
+            const csv = 'Name,Formula,Expected,Passed\n' +
+                        results.map(r => `"${r.name}","${r.formula}","${r.expected}",${r.passed}`).join('\n');
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'test-results.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+
+            showToast('Test results exported', 'success');
+        }
+
+        // Toast notifications
+        function showToast(message, type = 'info', duration = 3000) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <div class="toast-icon">${type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ'}</div>
+                <div class="toast-message">${message}</div>
+                <div class="toast-close">✕</div>
+            `;
+
+            container.appendChild(toast);
+
+            const closeToast = () => {
+                toast.style.animation = 'fadeOut 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            };
+
+            toast.querySelector('.toast-close').addEventListener('click', closeToast);
+            setTimeout(closeToast, duration);
+        }
+
+        // Simulate data changes
+        function simulateDataChange() {
+            const keys = Object.keys(measuredValues);
+            const randomKey = keys[Math.floor(Math.random() * keys.length)];
+            const oldValue = measuredValues[randomKey].value;
+            const newValue = oldValue + (Math.random() - 0.5) * 10;
+
+            measuredValues[randomKey].value = parseFloat(newValue.toFixed(2));
+            renderMeasuredValues();
+
+            showToast(`${measuredValues[randomKey].name} changed from ${oldValue.toFixed(2)} to ${newValue.toFixed(2)}`, 'info');
+
+            // Re-validate with new value
+            performBackendValidation();
+        }
+
+        // Sample formulas
+        const sampleFormulas = [
+            '($temperature * #conversion_factor) + 32',
+            'sqrt($pressure * $humidity)',
+            'sin(#pi / 2) + cos(0)',
+            'max($temperature, $pressure, $humidity)',
+            'if($temperature > #max_temp, 1, 0)',
+            'log10($voltage) * #gravity',
+            '($flow_rate * #gravity) / $pressure',
+            'abs($temperature - #max_temp)',
+            'round($humidity / 10, 1) * #conversion_factor'
+        ];
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', async () => {
             initializeEditor();
             renderSourceLists();
-            
+            renderFunctions();
+            await loadTestCases();
+
             // Initial validation
             setTimeout(performBackendValidation, 100);
+
+            // Tab switching
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabName = tab.dataset.tab;
+                    const parent = tab.parentElement.parentElement;
+
+                    parent.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    parent.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+
+                    const contentId = tabName + 'Tab';
+                    const content = document.getElementById(contentId);
+                    if (content) content.classList.add('active');
+                });
+            });
+
+            // Search functionality
+            document.getElementById('measuredSearch').addEventListener('input', (e) => {
+                renderMeasuredValues(e.target.value);
+            });
+
+            document.getElementById('constantsSearch').addEventListener('input', (e) => {
+                renderConstants(e.target.value);
+            });
+
+            // Toolbar buttons
+            document.getElementById('validateBtn').addEventListener('click', () => {
+                performBackendValidation();
+            });
+
+            document.getElementById('clearBtn').addEventListener('click', () => {
+                editor.setValue('', 1);
+                showToast('Editor cleared', 'info');
+            });
+
+            document.getElementById('samplesBtn').addEventListener('click', () => {
+                const formula = sampleFormulas[Math.floor(Math.random() * sampleFormulas.length)];
+                editor.setValue(formula, 1);
+                showToast('Sample formula inserted', 'info');
+            });
+
+            document.getElementById('copyFormulaBtn').addEventListener('click', () => {
+                const formula = editor.getValue();
+                navigator.clipboard.writeText(formula);
+                showToast('Formula copied to clipboard', 'success');
+            });
+
+            document.getElementById('copyResultBtn').addEventListener('click', () => {
+                const result = document.getElementById('resultValue').textContent;
+                if (result && result !== 'Enter a valid formula...') {
+                    navigator.clipboard.writeText(result);
+                    showToast('Result copied to clipboard', 'success');
+                }
+            });
+
+            document.getElementById('resultCopyBtn').addEventListener('click', () => {
+                const result = document.getElementById('resultValue').textContent;
+                if (result && result !== 'Enter a valid formula...') {
+                    navigator.clipboard.writeText(result);
+                    showToast('Result copied', 'success');
+                }
+            });
+
+            // Test suite
+            document.getElementById('testSuiteBtn').addEventListener('click', () => {
+                document.getElementById('testModal').classList.add('show');
+            });
+
+            document.getElementById('closeTestModal').addEventListener('click', () => {
+                document.getElementById('testModal').classList.remove('show');
+            });
+
+            document.getElementById('runTestsBtn').addEventListener('click', runTests);
+
+            document.getElementById('exportTestsBtn').addEventListener('click', exportTestResults);
+
+            // Simulate changes
+            document.getElementById('simulateChangeBtn').addEventListener('click', simulateDataChange);
+
+            // Add source buttons
+            document.getElementById('addMeasuredBtn').addEventListener('click', () => {
+                const key = prompt('Enter variable name (without $):');
+                if (key) {
+                    const name = prompt('Enter display name:');
+                    const value = parseFloat(prompt('Enter value:'));
+                    if (name && !isNaN(value)) {
+                        measuredValues['$' + key] = { name, value };
+                        renderMeasuredValues();
+                        showToast(`Added ${name}`, 'success');
+                    }
+                }
+            });
+
+            document.getElementById('addConstantBtn').addEventListener('click', () => {
+                const key = prompt('Enter constant name (without #):');
+                if (key) {
+                    const name = prompt('Enter display name:');
+                    const value = parseFloat(prompt('Enter value:'));
+                    if (name && !isNaN(value)) {
+                        constants['#' + key] = { name, value };
+                        renderConstants();
+                        showToast(`Added ${name}`, 'success');
+                    }
+                }
+            });
+
+            // Close modal on background click
+            document.getElementById('testModal').addEventListener('click', (e) => {
+                if (e.target.id === 'testModal') {
+                    document.getElementById('testModal').classList.remove('show');
+                }
+            });
         });
     </script>
 </body>

@@ -1,0 +1,410 @@
+{
+  "testCases": [
+    {
+      "id": "basic_addition",
+      "name": "Basic Addition",
+      "category": "Basic Math",
+      "formula": "5 + 3",
+      "expectedResult": 8,
+      "description": "Simple addition operation"
+    },
+    {
+      "id": "basic_subtraction",
+      "name": "Basic Subtraction",
+      "category": "Basic Math",
+      "formula": "10 - 4",
+      "expectedResult": 6,
+      "description": "Simple subtraction operation"
+    },
+    {
+      "id": "basic_multiplication",
+      "name": "Basic Multiplication",
+      "category": "Basic Math",
+      "formula": "6 * 7",
+      "expectedResult": 42,
+      "description": "Simple multiplication operation"
+    },
+    {
+      "id": "basic_division",
+      "name": "Basic Division",
+      "category": "Basic Math",
+      "formula": "20 / 4",
+      "expectedResult": 5,
+      "description": "Simple division operation"
+    },
+    {
+      "id": "power_operation",
+      "name": "Power Operation",
+      "category": "Basic Math",
+      "formula": "2^3",
+      "expectedResult": 8,
+      "description": "Power operation using caret"
+    },
+    {
+      "id": "modulo_operation",
+      "name": "Modulo Operation",
+      "category": "Basic Math",
+      "formula": "10 % 3",
+      "expectedResult": 1,
+      "description": "Modulo (remainder) operation"
+    },
+    {
+      "id": "parentheses_precedence",
+      "name": "Parentheses Precedence",
+      "category": "Basic Math",
+      "formula": "(2 + 3) * 4",
+      "expectedResult": 20,
+      "description": "Order of operations with parentheses"
+    },
+    {
+      "id": "complex_expression",
+      "name": "Complex Expression",
+      "category": "Basic Math",
+      "formula": "((5 + 3) * 2 - 4) / 3",
+      "expectedResult": 4,
+      "description": "Complex nested expression"
+    },
+    {
+      "id": "measured_value_simple",
+      "name": "Simple Measured Value",
+      "category": "Variables",
+      "formula": "$temperature",
+      "expectedResult": 25.5,
+      "description": "Using a single measured value"
+    },
+    {
+      "id": "measured_value_calculation",
+      "name": "Measured Value Calculation",
+      "category": "Variables",
+      "formula": "$temperature * 2",
+      "expectedResult": 51,
+      "description": "Calculation with measured value"
+    },
+    {
+      "id": "multiple_measured_values",
+      "name": "Multiple Measured Values",
+      "category": "Variables",
+      "formula": "$temperature + $pressure",
+      "expectedResult": 126.8,
+      "description": "Adding multiple measured values"
+    },
+    {
+      "id": "measured_value_complex",
+      "name": "Complex Measured Value Expression",
+      "category": "Variables",
+      "formula": "($temperature * $humidity) / 100",
+      "expectedResult": 16.626,
+      "description": "Complex calculation with measured values"
+    },
+    {
+      "id": "constant_simple",
+      "name": "Simple Constant",
+      "category": "Constants",
+      "formula": "#pi",
+      "expectedResult": 3.14159,
+      "description": "Using a single constant"
+    },
+    {
+      "id": "constant_calculation",
+      "name": "Constant Calculation",
+      "category": "Constants",
+      "formula": "#pi * 2",
+      "expectedResult": 6.28318,
+      "description": "Calculation with constant"
+    },
+    {
+      "id": "constant_with_measured",
+      "name": "Constant with Measured Value",
+      "category": "Constants",
+      "formula": "$temperature * #conversion_factor",
+      "expectedResult": 45.9,
+      "description": "Mixing constants and measured values"
+    },
+    {
+      "id": "temperature_conversion",
+      "name": "Temperature Conversion",
+      "category": "Practical",
+      "formula": "($temperature * #conversion_factor) + 32",
+      "expectedResult": 77.9,
+      "description": "Celsius to Fahrenheit conversion"
+    },
+    {
+      "id": "gravity_calculation",
+      "name": "Gravity Calculation",
+      "category": "Practical",
+      "formula": "$flow_rate * #gravity",
+      "expectedResult": 125.568,
+      "description": "Flow rate with gravity factor"
+    },
+    {
+      "id": "sin_function",
+      "name": "Sine Function",
+      "category": "Trigonometric",
+      "formula": "sin(0)",
+      "expectedResult": 0,
+      "description": "Sine of zero"
+    },
+    {
+      "id": "cos_function",
+      "name": "Cosine Function",
+      "category": "Trigonometric",
+      "formula": "cos(0)",
+      "expectedResult": 1,
+      "description": "Cosine of zero"
+    },
+    {
+      "id": "tan_function",
+      "name": "Tangent Function",
+      "category": "Trigonometric",
+      "formula": "tan(#pi/4)",
+      "expectedResult": 1,
+      "description": "Tangent of pi/4"
+    },
+    {
+      "id": "sqrt_function",
+      "name": "Square Root",
+      "category": "Mathematical",
+      "formula": "sqrt(16)",
+      "expectedResult": 4,
+      "description": "Square root of 16"
+    },
+    {
+      "id": "abs_function",
+      "name": "Absolute Value",
+      "category": "Mathematical",
+      "formula": "abs(-10)",
+      "expectedResult": 10,
+      "description": "Absolute value of negative number"
+    },
+    {
+      "id": "ln_function",
+      "name": "Natural Logarithm",
+      "category": "Mathematical",
+      "formula": "ln(2.71828)",
+      "expectedResult": 0.99999,
+      "description": "Natural log of e"
+    },
+    {
+      "id": "log10_function",
+      "name": "Log Base 10",
+      "category": "Mathematical",
+      "formula": "log10(100)",
+      "expectedResult": 2,
+      "description": "Log base 10 of 100"
+    },
+    {
+      "id": "exp_function",
+      "name": "Exponential",
+      "category": "Mathematical",
+      "formula": "exp(1)",
+      "expectedResult": 2.71828,
+      "description": "e raised to power 1"
+    },
+    {
+      "id": "min_function",
+      "name": "Minimum Value",
+      "category": "Mathematical",
+      "formula": "min(5, 3, 8, 2)",
+      "expectedResult": 2,
+      "description": "Minimum of multiple values"
+    },
+    {
+      "id": "max_function",
+      "name": "Maximum Value",
+      "category": "Mathematical",
+      "formula": "max(5, 3, 8, 2)",
+      "expectedResult": 8,
+      "description": "Maximum of multiple values"
+    },
+    {
+      "id": "floor_function",
+      "name": "Floor Function",
+      "category": "Mathematical",
+      "formula": "floor(4.7)",
+      "expectedResult": 4,
+      "description": "Floor of decimal number"
+    },
+    {
+      "id": "ceil_function",
+      "name": "Ceiling Function",
+      "category": "Mathematical",
+      "formula": "ceil(4.3)",
+      "expectedResult": 5,
+      "description": "Ceiling of decimal number"
+    },
+    {
+      "id": "round_function",
+      "name": "Round Function",
+      "category": "Mathematical",
+      "formula": "round(4.5, 0)",
+      "expectedResult": 5,
+      "description": "Rounding to nearest integer"
+    },
+    {
+      "id": "avg_function",
+      "name": "Average Function",
+      "category": "Statistical",
+      "formula": "avg(10, 20, 30)",
+      "expectedResult": 20,
+      "description": "Average of multiple values"
+    },
+    {
+      "id": "nested_functions",
+      "name": "Nested Functions",
+      "category": "Complex",
+      "formula": "sqrt(abs(min(-16, -9)))",
+      "expectedResult": 4,
+      "description": "Multiple nested functions"
+    },
+    {
+      "id": "complex_trig",
+      "name": "Complex Trigonometric",
+      "category": "Complex",
+      "formula": "sin(#pi/2) + cos(0)",
+      "expectedResult": 2,
+      "description": "Combined trigonometric functions"
+    },
+    {
+      "id": "threshold_check",
+      "name": "Threshold Check",
+      "category": "Practical",
+      "formula": "if($temperature > #max_temp, 1, 0)",
+      "expectedResult": 0,
+      "description": "Conditional threshold check"
+    },
+    {
+      "id": "range_check",
+      "name": "Range Check",
+      "category": "Practical",
+      "formula": "if($temperature > #min_temp, if($temperature < #max_temp, 1, 0), 0)",
+      "expectedResult": 1,
+      "description": "Temperature within range check"
+    },
+    {
+      "id": "division_by_zero",
+      "name": "Division by Zero",
+      "category": "Edge Cases",
+      "formula": "1 / 0",
+      "expectedError": "infinity",
+      "description": "Division by zero error"
+    },
+    {
+      "id": "undefined_variable",
+      "name": "Undefined Variable",
+      "category": "Edge Cases",
+      "formula": "$undefined_var",
+      "expectedError": "Undefined variable",
+      "description": "Using undefined variable"
+    },
+    {
+      "id": "undefined_constant",
+      "name": "Undefined Constant",
+      "category": "Edge Cases",
+      "formula": "#undefined_const",
+      "expectedError": "Undefined constant",
+      "description": "Using undefined constant"
+    },
+    {
+      "id": "empty_parentheses",
+      "name": "Empty Parentheses",
+      "category": "Edge Cases",
+      "formula": "5 + ()",
+      "expectedError": "Empty parentheses",
+      "description": "Empty parentheses syntax error"
+    },
+    {
+      "id": "unmatched_parentheses",
+      "name": "Unmatched Parentheses",
+      "category": "Edge Cases",
+      "formula": "((5 + 3) * 2",
+      "expectedError": "Unmatched opening parenthesis",
+      "description": "Missing closing parenthesis"
+    },
+    {
+      "id": "double_operators",
+      "name": "Double Operators",
+      "category": "Edge Cases",
+      "formula": "5 ++ 3",
+      "expectedError": "Invalid double operators",
+      "description": "Invalid double operators"
+    },
+    {
+      "id": "starting_with_operator",
+      "name": "Starting with Operator",
+      "category": "Edge Cases",
+      "formula": "* 5",
+      "expectedError": "cannot start with an operator",
+      "description": "Formula starting with operator"
+    },
+    {
+      "id": "ending_with_operator",
+      "name": "Ending with Operator",
+      "category": "Edge Cases",
+      "formula": "5 +",
+      "expectedError": "ends with an operator",
+      "description": "Formula ending with operator"
+    },
+    {
+      "id": "missing_operator",
+      "name": "Missing Operator",
+      "category": "Edge Cases",
+      "formula": "5 3",
+      "expectedError": "Missing operator",
+      "description": "Missing operator between numbers"
+    },
+    {
+      "id": "very_large_number",
+      "name": "Very Large Number",
+      "category": "Edge Cases",
+      "formula": "999999999999 * 999999999999",
+      "expectedResult": 9.99999999998e+23,
+      "description": "Very large number calculation"
+    },
+    {
+      "id": "very_small_number",
+      "name": "Very Small Number",
+      "category": "Edge Cases",
+      "formula": "0.000000001 * 0.000000001",
+      "expectedResult": 1e-18,
+      "description": "Very small number calculation"
+    },
+    {
+      "id": "negative_sqrt",
+      "name": "Negative Square Root",
+      "category": "Edge Cases",
+      "formula": "sqrt(-1)",
+      "expectedError": "NaN",
+      "description": "Square root of negative number"
+    },
+    {
+      "id": "unit_conversion_meter_to_km",
+      "name": "Meter to Kilometer",
+      "category": "Unit Conversion",
+      "formula": "$temperature.kilometer",
+      "expectedResult": 0.0255,
+      "description": "Convert meters to kilometers (assuming temperature has meter unit)"
+    },
+    {
+      "id": "complex_formula_all_features",
+      "name": "Complex Formula with All Features",
+      "category": "Complex",
+      "formula": "(sqrt($pressure) * sin(#pi/6)) + (log10($voltage) * #gravity) - ($humidity / #conversion_factor)",
+      "expectedResult": 18.2935,
+      "description": "Using all features: variables, constants, functions"
+    }
+  ],
+  "measuredValues": {
+    "$temperature": { "name": "Temperature", "value": 25.5, "unit": "meter" },
+    "$pressure": { "name": "Pressure", "value": 101.3 },
+    "$humidity": { "name": "Humidity", "value": 65.2 },
+    "$flow_rate": { "name": "Flow Rate", "value": 12.8 },
+    "$voltage": { "name": "Voltage", "value": 220.0 }
+  },
+  "constants": {
+    "#pi": { "name": "Pi", "value": 3.14159 },
+    "#gravity": { "name": "Gravity", "value": 9.81 },
+    "#max_temp": { "name": "Max Temperature", "value": 100.0 },
+    "#min_temp": { "name": "Min Temperature", "value": -10.0 },
+    "#conversion_factor": { "name": "Conversion Factor", "value": 1.8 }
+  }
+}
