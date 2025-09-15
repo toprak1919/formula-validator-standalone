@@ -1,18 +1,17 @@
 services:
   - type: web
     name: formula-validator-api
-    runtime: dotnet
+    runtime: docker
     rootDir: formula-validator-standalone/backend/FormulaValidator
-    buildCommand: |
-      dotnet restore
-      dotnet publish -c Release -o out
-    startCommand: ASPNETCORE_URLS=http://0.0.0.0:$PORT dotnet out/FormulaValidator.dll
+    dockerfilePath: ./formula-validator-standalone/backend/FormulaValidator/Dockerfile
     autoDeploy: true
     healthCheckPath: /graphql
     plan: free
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
+      - key: ASPNETCORE_URLS
+        value: http://0.0.0.0:10000
 
   - type: web
     name: formula-validator-frontend
