@@ -5,6 +5,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services
 builder.Services.AddScoped<IFormulaValidationService, FormulaValidationService>();
+builder.Services.AddSingleton<IConstantRepository, ConfigConstantRepository>();
 
 // Add CORS
 builder.Services.AddCors(options =>

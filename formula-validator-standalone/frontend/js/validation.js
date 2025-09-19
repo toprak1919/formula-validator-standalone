@@ -1,4 +1,4 @@
-import { state, clearValidationTimeout } from './state.js';
+import { state, clearValidationTimeout, getConstantOverrides } from './state.js';
 import {
   updateValidationStatus,
   showErrors,
@@ -12,20 +12,20 @@ function buildRequestPayload(formulaText) {
     ? formulaText
     : (state.editor ? state.editor.getValue() : '');
 
-  return {
+  const payload = {
     formula: formulaValue,
     measuredValues: Object.entries(state.measuredValues).map(([id, data]) => ({
       id,
       name: data.name,
       value: data.value,
       unit: data.unit
-    })),
-    constants: Object.entries(state.constants).map(([id, data]) => ({
-      id,
-      name: data.name,
-      value: data.value
     }))
   };
+
+  const constantOverrides = getConstantOverrides();
+  payload.constants = constantOverrides;
+
+  return payload;
 }
 
 function normalizeFormulaSymbols(formula, caretIndex = null) {

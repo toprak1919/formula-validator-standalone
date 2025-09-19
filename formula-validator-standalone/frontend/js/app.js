@@ -1,4 +1,4 @@
-import { state, setEditor, setValidationTimeout } from './state.js';
+import { state, setEditor, setValidationTimeout, setBackendConstants } from './state.js';
 import { createCustomCompleter } from './autocomplete.js';
 import {
   renderMeasuredValues,
@@ -9,7 +9,8 @@ import {
   updateValidationStatus,
   setValidationCallback,
   setupSourceSearch,
-  setupAddSourceButtons
+  setupAddSourceButtons,
+  setupSourcePanelToggle
 } from './ui.js';
 import { performBackendValidation } from './validation.js';
 import { loadTestCases, runTests, exportTestResults } from './tests.js';
@@ -52,6 +53,40 @@ function initializeEditor() {
   });
 
   setEditor(editor);
+}
+
+async function fetchBackendConstants() {
+  try {
+    const response = await fetch(window.API_CONFIG.URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        query: `
+          query FetchConstants {
+            constants {
+              id
+              name
+              value
+            }
+          }
+        `
+      })
+    });
+
+    const payload = await response.json();
+
+    if (payload.errors) {
+      console.error('Failed to load constants:', payload.errors);
+      return;
+    }
+
+    const constants = payload?.data?.constants ?? [];
+    setBackendConstants(constants);
+  } catch (error) {
+    console.error('Failed to load constants:', error);
+  }
 }
 
 function simulateDataChange() {
@@ -220,11 +255,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupValidationCallback();
 
   renderMeasuredValues();
-  renderConstants();
   renderFunctions();
   renderHistory();
   setupSourceSearch();
   setupAddSourceButtons();
+  setupSourcePanelToggle();
   setupClipboardButtons();
   setupToolbarButtons();
   setupThemeToggle();
@@ -234,6 +269,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
   const savedTheme = localStorage.getItem('theme');
   applyTheme(savedTheme || (prefersDark ? 'dark' : 'light'));
+
+  await fetchBackendConstants();
+  renderConstants();
 
   await loadTestCases();
   renderMeasuredValues();

@@ -1,4 +1,4 @@
-import { state } from './state.js';
+import { state, isBackendConstant } from './state.js';
 import { escapeHtml } from './utils.js';
 
 let validationCallback = () => {};
@@ -131,6 +131,54 @@ function insertIntoEditor(text) {
   state.editor.focus();
 }
 
+export function renderSourceKeyboard() {
+  const container = document.getElementById('sourceKeyboard');
+  if (!container) return;
+
+  container.innerHTML = '';
+
+  const createGroup = (label, entries) => {
+    if (!entries.length) return;
+
+    const group = document.createElement('div');
+    group.className = 'keyboard-group';
+
+    const labelEl = document.createElement('span');
+    labelEl.className = 'keyboard-group-label';
+    labelEl.textContent = label;
+
+    const buttonsWrap = document.createElement('div');
+    buttonsWrap.className = 'keyboard-group-buttons';
+
+    entries.forEach(([key, data]) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'keyboard-chip';
+      btn.textContent = key;
+      btn.title = data.name ? `${data.name} (${key})` : key;
+      btn.addEventListener('click', () => insertIntoEditor(key));
+      buttonsWrap.appendChild(btn);
+    });
+
+    group.appendChild(labelEl);
+    group.appendChild(buttonsWrap);
+    container.appendChild(group);
+  };
+
+  const measuredEntries = Object.entries(state.measuredValues);
+  const constantEntries = Object.entries(state.constants);
+
+  createGroup('Measured', measuredEntries);
+  createGroup('Constants', constantEntries);
+
+  if (!container.childElementCount) {
+    const empty = document.createElement('div');
+    empty.className = 'keyboard-empty';
+    empty.textContent = 'Add variables or constants to insert them quickly.';
+    container.appendChild(empty);
+  }
+}
+
 function createSourceItem(key, data, type) {
   const item = document.createElement('div');
   item.className = 'source-item';
@@ -173,6 +221,11 @@ function createSourceItem(key, data, type) {
   const editButton = item.querySelector('.edit-btn');
   const deleteButton = item.querySelector('.delete-btn');
 
+  const isCoreConstant = type === 'constant' && isBackendConstant(key);
+  if (isCoreConstant && deleteButton) {
+    deleteButton.classList.add('hidden');
+  }
+
   editButton.addEventListener('click', (e) => {
     e.stopPropagation();
     showEditForm(item, key, data, type);
@@ -180,6 +233,10 @@ function createSourceItem(key, data, type) {
 
   deleteButton.addEventListener('click', (e) => {
     e.stopPropagation();
+    if (isCoreConstant) {
+      showToast('Built-in constants cannot be deleted.', 'info');
+      return;
+    }
     if (confirm(`Delete ${data.name}?`)) {
       if (type === 'measured') {
         delete state.measuredValues[key];
@@ -275,6 +332,8 @@ export function renderMeasuredValues(searchTerm = '') {
       const item = createSourceItem(key, data, 'measured');
       list.appendChild(item);
     });
+
+  renderSourceKeyboard();
 }
 
 export function renderConstants(searchTerm = '') {
@@ -291,6 +350,8 @@ export function renderConstants(searchTerm = '') {
       const item = createSourceItem(key, data, 'constant');
       list.appendChild(item);
     });
+
+  renderSourceKeyboard();
 }
 
 export function renderFunctions() {
@@ -406,4 +467,29 @@ export function setupAddSourceButtons() {
       validationCallback();
     });
   }
+}
+
+export function setupSourcePanelToggle() {
+  const panel = document.getElementById('sourcePanel');
+  const toggle = document.getElementById('sourcePanelToggle');
+  if (!panel || !toggle) return;
+
+  const icon = toggle.querySelector('.icon');
+
+  const applyState = (collapsed) => {
+    panel.classList.toggle('collapsed', collapsed);
+    toggle.setAttribute('aria-expanded', String(!collapsed));
+    toggle.setAttribute('aria-label', collapsed ? 'Expand sources' : 'Collapse sources');
+    toggle.title = collapsed ? 'Expand sources' : 'Collapse sources';
+    if (icon) {
+      icon.className = `icon ${collapsed ? 'icon-chevron-down' : 'icon-chevron-up'}`;
+    }
+  };
+
+  applyState(false);
+
+  toggle.addEventListener('click', () => {
+    const collapsed = !panel.classList.contains('collapsed');
+    applyState(collapsed);
+  });
 }

@@ -13,6 +13,13 @@ namespace FormulaValidator.Services
 
     public class FormulaValidationService : IFormulaValidationService
     {
+        private readonly IConstantRepository _constantRepository;
+
+        public FormulaValidationService(IConstantRepository constantRepository)
+        {
+            _constantRepository = constantRepository;
+        }
+
         public ValidationResult ValidateFormula(ValidationRequest request)
         {
             var result = new ValidationResult { Source = "Backend" };
@@ -63,10 +70,12 @@ namespace FormulaValidator.Services
                     }
                 }
 
+                var constantLookup = MergeConstants(_constantRepository.GetAll(), request.Constants);
+
                 // undefined constants
                 foreach (var c in collector.Constants)
                 {
-                    if (!request.Constants.Any(k => string.Equals(k.Id.TrimStart('#'), c, StringComparison.OrdinalIgnoreCase)))
+                    if (!constantLookup.ContainsKey(c))
                     {
                         result.Error = $"Undefined constant: #{c}";
                         return result;
@@ -85,7 +94,7 @@ namespace FormulaValidator.Services
                 }
 
                 // --- 3) Evaluate
-                var evaluator = new EvalVisitor(request.MeasuredValues, request.Constants);
+                var evaluator = new EvalVisitor(request.MeasuredValues, constantLookup.Values);
                 var value = evaluator.Visit(tree);
 
                 if (double.IsNaN(value))
@@ -121,6 +130,54 @@ namespace FormulaValidator.Services
             }
 
             return result;
+        }
+
+        private static Dictionary<string, Constant> MergeConstants(
+            IEnumerable<Constant> baseConstants,
+            IEnumerable<Constant>? overrides)
+        {
+            var lookup = new Dictionary<string, Constant>(StringComparer.OrdinalIgnoreCase);
+
+            void AddOrReplace(Constant constant)
+            {
+                var normalizedId = NormalizeConstantId(constant.Id);
+                if (normalizedId == "#")
+                {
+                    return;
+                }
+                var trimmed = normalizedId.TrimStart('#');
+                lookup[trimmed] = new Constant
+                {
+                    Id = normalizedId,
+                    Name = constant.Name,
+                    Value = constant.Value
+                };
+            }
+
+            foreach (var constant in baseConstants)
+            {
+                AddOrReplace(constant);
+            }
+
+            if (overrides != null)
+            {
+                foreach (var constant in overrides)
+                {
+                    AddOrReplace(constant);
+                }
+            }
+
+            return lookup;
+        }
+
+        private static string NormalizeConstantId(string id)
+        {
+            var trimmed = (id ?? string.Empty).Trim();
+            if (!trimmed.StartsWith("#", StringComparison.Ordinal))
+            {
+                trimmed = "#" + trimmed;
+            }
+            return trimmed;
         }
     }
 }

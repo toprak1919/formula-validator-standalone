@@ -1,4 +1,4 @@
-import { state } from './state.js';
+import { state, resetConstantsToBackend, applyConstantOverrides, getConstantOverrides } from './state.js';
 import { showToast } from './ui.js';
 
 function renderTestResult(result) {
@@ -45,11 +45,7 @@ async function runSingleTest(testCase) {
       value: data.value,
       unit: data.unit
     })),
-    constants: Object.entries(state.constants).map(([id, data]) => ({
-      id,
-      name: data.name,
-      value: data.value
-    }))
+    constants: getConstantOverrides()
   };
 
   try {
@@ -117,7 +113,10 @@ export async function loadTestCases() {
       state.measuredValues = data.measuredValues;
     }
     if (data.constants) {
-      state.constants = data.constants;
+      resetConstantsToBackend();
+      applyConstantOverrides(data.constants);
+    } else {
+      resetConstantsToBackend();
     }
   } catch (error) {
     console.error('Failed to load test cases:', error);

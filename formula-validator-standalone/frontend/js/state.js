@@ -32,13 +32,8 @@ export const state = {
     '$flow_rate': { name: 'Flow Rate', value: 12.8 },
     '$voltage': { name: 'Voltage', value: 220.0, unit: 'V' }
   },
-  constants: {
-    '#pi': { name: 'Pi', value: 3.14159 },
-    '#gravity': { name: 'Gravity', value: 9.81 },
-    '#max_temp': { name: 'Max Temperature', value: 100.0 },
-    '#min_temp': { name: 'Min Temperature', value: -10.0 },
-    '#conversion_factor': { name: 'Conversion Factor', value: 1.8 }
-  },
+  constants: {},
+  backendConstants: {},
   completionUsage: loadCompletionUsage(),
   sampleFormulas: [
     '($temperature * #conversion_factor) + 32',
@@ -121,4 +116,75 @@ export function clearValidationTimeout() {
     clearTimeout(state.validationTimeout);
     state.validationTimeout = null;
   }
+}
+
+function normalizeConstantId(id) {
+  const trimmed = (id || '').trim();
+  return trimmed.startsWith('#') ? trimmed : `#${trimmed}`;
+}
+
+export function setBackendConstants(constantsArray) {
+  const backend = {};
+  if (Array.isArray(constantsArray)) {
+    constantsArray.forEach(item => {
+      if (!item) return;
+      const id = normalizeConstantId(item.id || item.Id || '');
+      if (!id || id === '#') return;
+      const rawValue = typeof item.value === 'number' ? item.value : Number(item.value);
+      if (Number.isNaN(rawValue)) return;
+
+      backend[id] = {
+        name: item.name ?? item.Name ?? id,
+        value: rawValue
+      };
+    });
+  }
+
+  state.backendConstants = backend;
+  state.constants = { ...backend };
+}
+
+export function resetConstantsToBackend() {
+  state.constants = { ...state.backendConstants };
+}
+
+export function applyConstantOverrides(overrides) {
+  if (!overrides) return;
+  Object.entries(overrides).forEach(([rawId, data]) => {
+    const id = normalizeConstantId(rawId);
+    if (!data) return;
+    const value = typeof data.value === 'number' ? data.value : Number(data.value);
+    if (Number.isNaN(value)) return;
+    state.constants[id] = {
+      name: data.name || id,
+      value
+    };
+  });
+}
+
+export function getConstantOverrides() {
+  const overrides = [];
+  const backend = state.backendConstants;
+
+  Object.entries(state.constants).forEach(([id, data]) => {
+    const normalizedId = normalizeConstantId(id);
+    const value = typeof data.value === 'number' ? data.value : Number(data.value);
+    if (Number.isNaN(value)) return;
+
+    const backendEntry = backend[normalizedId];
+    if (!backendEntry || backendEntry.value !== value || (backendEntry.name || normalizedId) !== (data.name || normalizedId)) {
+      overrides.push({
+        id: normalizedId,
+        name: data.name || normalizedId,
+        value
+      });
+    }
+  });
+
+  return overrides;
+}
+
+export function isBackendConstant(id) {
+  const normalizedId = normalizeConstantId(id);
+  return Object.prototype.hasOwnProperty.call(state.backendConstants, normalizedId);
 }
