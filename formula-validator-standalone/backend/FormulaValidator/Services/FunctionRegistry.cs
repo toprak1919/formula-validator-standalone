@@ -13,6 +13,12 @@ namespace FormulaValidator.Services
                 ["sin"] = a => Math.Sin(One(a)),
                 ["cos"] = a => Math.Cos(One(a)),
                 ["tan"] = a => Math.Tan(One(a)),
+                ["asin"] = a => Math.Asin(One(a)),
+                ["acos"] = a => Math.Acos(One(a)),
+                ["atan"] = a => Math.Atan(One(a)),
+                ["sinh"] = a => Math.Sinh(One(a)),
+                ["cosh"] = a => Math.Cosh(One(a)),
+                ["tanh"] = a => Math.Tanh(One(a)),
 
                 // Logs & exp
                 ["ln"] = a => Math.Log(One(a)),
@@ -40,8 +46,11 @@ namespace FormulaValidator.Services
                 ["min"]  = a => a.Min(),
                 ["max"]  = a => a.Max(),
                 ["sum"]  = a => a.Sum(),
+                ["prod"] = a => Product(a),
                 ["mean"] = a => a.Average(),
                 ["avg"]  = a => a.Average(), // alias
+                ["var"]  = a => Variance(a),
+                ["std"]  = a => Math.Sqrt(Variance(a)),
 
                 // Conditional
                 // if(cond, thenVal, elseVal) -- nonzero cond is true
@@ -66,6 +75,22 @@ namespace FormulaValidator.Services
         {
             if (i >= a.Length) throw new ArgumentException($"Function expects at least {i+1} arguments.");
             return a[i];
+        }
+
+        private static double Product(double[] values)
+        {
+            if (values.Length == 0) throw new ArgumentException("Function expects at least 1 argument.");
+            double acc = 1d;
+            foreach (var v in values) acc *= v;
+            return acc;
+        }
+
+        private static double Variance(double[] values)
+        {
+            if (values.Length < 2) throw new ArgumentException("Function expects at least 2 arguments.");
+            var mean = values.Average();
+            var sumSq = values.Sum(v => Math.Pow(v - mean, 2));
+            return sumSq / values.Length; // population variance
         }
 
         private static bool ToBool(double v) => Math.Abs(v) > double.Epsilon;
@@ -94,4 +119,3 @@ namespace FormulaValidator.Services
         }
     }
 }
-

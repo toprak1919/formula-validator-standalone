@@ -802,11 +802,11 @@
     }
   ],
   "measuredValues": {
-    "$temperature": { "name": "Temperature", "value": 25.5, "unit": "meter" },
+    "$temperature": { "name": "Temperature", "value": 25.5, "unit": "C" },
     "$pressure": { "name": "Pressure", "value": 101.3 },
     "$humidity": { "name": "Humidity", "value": 65.2 },
     "$flow_rate": { "name": "Flow Rate", "value": 12.8 },
-    "$voltage": { "name": "Voltage", "value": 220.0 }
+    "$voltage": { "name": "Voltage", "value": 220.0, "unit": "V" }
   },
   "constants": {
     "#pi": { "name": "Pi", "value": 3.14159 },

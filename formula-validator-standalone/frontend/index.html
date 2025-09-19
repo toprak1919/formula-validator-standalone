@@ -1814,11 +1814,11 @@
 
         // Data sources
         let measuredValues = {
-            '$temperature': { name: 'Temperature', value: 25.5, unit: 'meter' },
+            '$temperature': { name: 'Temperature', value: 25.5, unit: 'C' },
             '$pressure': { name: 'Pressure', value: 101.3 },
             '$humidity': { name: 'Humidity', value: 65.2 },
             '$flow_rate': { name: 'Flow Rate', value: 12.8 },
-            '$voltage': { name: 'Voltage', value: 220.0 }
+            '$voltage': { name: 'Voltage', value: 220.0, unit: 'V' }
         };
 
         let constants = {
@@ -2397,13 +2397,18 @@
                     showErrors([error]);
                     updateResult(null);
 
-                    // Add error annotation to ACE editor
+                    // Add error annotation to ACE editor at relevant location
+                    const locationMatch = error.match(/line\s+(\d+),\s*col(?:umn)?\s+(\d+)/i);
+                    const row = locationMatch ? Math.max(parseInt(locationMatch[1], 10) - 1, 0) : 0;
+                    const column = locationMatch ? Math.max(parseInt(locationMatch[2], 10) - 1, 0) : 0;
                     editor.session.setAnnotations([{
-                        row: 0,
-                        column: 0,
+                        row,
+                        column,
                         text: error,
                         type: "error"
                     }]);
+                    editor.scrollToLine(row, true, true, function () {});
+                    editor.gotoLine(row + 1, column, true);
                 }
 
                 updateBackendIndicator(false, 'Ready');
