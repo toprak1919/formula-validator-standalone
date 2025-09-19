@@ -1,5 +1,5 @@
 // Configuration for API endpoint
-const API_CONFIG = {
+export const API_CONFIG = {
     // For local development
     LOCAL_URL: 'http://localhost:5001/graphql',
     
@@ -17,3 +17,7 @@ const API_CONFIG = {
         return this.PRODUCTION_URL;
     }
 };
+
+if (typeof window !== 'undefined') {
+    window.API_CONFIG = API_CONFIG;
+}

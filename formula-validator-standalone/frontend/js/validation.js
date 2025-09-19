@@ -7,9 +7,13 @@ import {
   addToHistory
 } from './ui.js';
 
-function buildRequestPayload() {
+function buildRequestPayload(formulaText) {
+  const formulaValue = typeof formulaText === 'string'
+    ? formulaText
+    : (state.editor ? state.editor.getValue() : '');
+
   return {
-    formula: state.editor ? state.editor.getValue() : '',
+    formula: formulaValue,
     measuredValues: Object.entries(state.measuredValues).map(([id, data]) => ({
       id,
       name: data.name,
@@ -24,13 +28,50 @@ function buildRequestPayload() {
   };
 }
 
+function normalizeFormulaSymbols(formula, caretIndex = null) {
+  let newCaretIndex = caretIndex ?? null;
+
+  const normalized = formula.replace(/([#$])\1+(?=[a-zA-Z_])/g, (match, symbol, offset) => {
+    if (newCaretIndex !== null && newCaretIndex > offset) {
+      const reduction = match.length - 1;
+      const removalBeforeCaret = Math.min(reduction, newCaretIndex - offset);
+      if (removalBeforeCaret > 0) {
+        newCaretIndex = Math.max(0, newCaretIndex - removalBeforeCaret);
+      }
+    }
+    return symbol;
+  });
+
+  return {
+    normalized,
+    newCaretIndex: newCaretIndex ?? null
+  };
+}
+
 export async function performBackendValidation({ allowToast = false, focusError = false } = {}) {
   if (!state.editor) return;
-  const formula = state.editor.getValue();
+  const originalFormula = state.editor.getValue();
 
   clearValidationTimeout();
 
-  if (!formula || formula.trim() === '') {
+  const cursorPosition = state.editor.getCursorPosition();
+  const cursorIndex = state.editor.session.doc.positionToIndex(cursorPosition);
+  const { normalized: normalizedFormula, newCaretIndex } = normalizeFormulaSymbols(originalFormula, cursorIndex);
+
+  if (normalizedFormula !== originalFormula) {
+    const scrollTop = state.editor.session.getScrollTop();
+    const Range = ace.require('ace/range').Range;
+    const lastRow = state.editor.session.getLength() - 1;
+    const lastCol = lastRow >= 0 ? state.editor.session.getLine(lastRow).length : 0;
+    state.editor.session.replace(new Range(0, 0, Math.max(lastRow, 0), lastCol), normalizedFormula);
+    if (newCaretIndex !== null) {
+      const newCursorPos = state.editor.session.doc.indexToPosition(newCaretIndex);
+      state.editor.moveCursorTo(newCursorPos.row, newCursorPos.column);
+    }
+    state.editor.session.setScrollTop(scrollTop);
+  }
+
+  if (!normalizedFormula || normalizedFormula.trim() === '') {
     updateValidationStatus('');
     showErrors([]);
     updateResult(null);
@@ -39,7 +80,7 @@ export async function performBackendValidation({ allowToast = false, focusError 
 
   updateBackendIndicator(true, 'Validating...');
 
-  const requestData = buildRequestPayload();
+  const requestData = buildRequestPayload(normalizedFormula);
 
   try {
     const response = await fetch(window.API_CONFIG.URL, {
@@ -82,7 +123,7 @@ export async function performBackendValidation({ allowToast = false, focusError 
       updateValidationStatus('valid');
       showErrors([]);
       updateResult(validationResult.result);
-      addToHistory(formula, validationResult.result);
+      addToHistory(normalizedFormula, validationResult.result);
       state.editor.session.clearAnnotations();
     } else {
       updateValidationStatus('error');

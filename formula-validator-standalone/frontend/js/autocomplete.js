@@ -417,7 +417,7 @@ export function createCustomCompleter() {
         while (startColumn > 0 && /[a-zA-Z0-9_]/.test(line[startColumn - 1])) {
           startColumn -= 1;
         }
-        if (startColumn > 0 && line[startColumn - 1] === symbol) {
+        while (startColumn > 0 && line[startColumn - 1] === symbol) {
           startColumn -= 1;
         }
       }
@@ -456,6 +456,30 @@ export function createCustomCompleter() {
         }
 
         session.insert(insertPos, valueToInsert);
+
+        if (symbol) {
+          const row = insertPos.row;
+          let lineText = session.getLine(row);
+
+          let normStart = insertPos.column;
+          while (normStart > 0 && lineText[normStart - 1] === symbol) {
+            normStart -= 1;
+          }
+
+          let normEnd = normStart;
+          while (normEnd < lineText.length && /[a-zA-Z0-9_]/.test(lineText[normEnd])) {
+            normEnd += 1;
+          }
+
+          const token = lineText.slice(normStart, normEnd);
+          const extraMatch = token.match(new RegExp(`^\\${symbol}{2,}`));
+          if (extraMatch) {
+            const rest = token.slice(extraMatch[0].length);
+            const normalized = symbol + rest;
+            session.replace(new Range(row, normStart, row, normEnd), normalized);
+            editor.moveCursorTo(row, normStart + normalized.length);
+          }
+        }
       }
 
       editor.focus();
