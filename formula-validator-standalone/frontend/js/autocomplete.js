@@ -435,10 +435,27 @@ export function createCustomCompleter() {
 
       removePrefix();
 
+      const insertPos = editor.getCursorPosition();
       if (completion.snippet) {
         editor.insertSnippet(completion.snippet);
       } else {
-        session.insert(editor.getCursorPosition(), completion.value);
+        let valueToInsert = completion.value ?? '';
+        const symbol = completion.caption && (completion.caption.startsWith('#') || completion.caption.startsWith('$'))
+          ? completion.caption[0]
+          : null;
+
+        if (symbol) {
+          if (!valueToInsert.startsWith(symbol)) {
+            valueToInsert = symbol + valueToInsert;
+          }
+
+          const lineNow = session.getLine(insertPos.row);
+          if (insertPos.column > 0 && lineNow[insertPos.column - 1] === symbol) {
+            valueToInsert = valueToInsert.slice(1);
+          }
+        }
+
+        session.insert(insertPos, valueToInsert);
       }
 
       editor.focus();
