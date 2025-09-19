@@ -107,10 +107,15 @@
 
             <!-- Center Panel - Editor -->
             <div class="panel">
-                <div class="panel-title">
+                <div class="panel-title formula-panel-header">
                     <div class="panel-title-text">Formula Editor</div>
+                    <div class="panel-actions formula-actions">
+                        <button class="icon-btn" id="editorCollapseToggle" aria-expanded="true" aria-label="Collapse editor">
+                            <span class="icon icon-chevron-up" aria-hidden="true"></span>
+                        </button>
+                    </div>
                 </div>
-                <div class="editor-container">
+                <div class="editor-container" id="editorContainer">
                     <div class="validation-status" id="validationStatus">
                         <span class="status-icon"></span>
                         <span>Ready</span>
@@ -133,7 +138,20 @@
                     <div class="history-title">Formula History</div>
                     <div class="history-list" id="historyList"></div>
                 </div>
-            </div>
+                    <div class="saved-formulas">
+                        <div class="saved-header">
+                            <div class="saved-title">Saved Formulas</div>
+                            <div class="saved-actions">
+                                <input type="text" id="saveFormulaName" class="saved-input" placeholder="Formula name">
+                                <button class="btn btn-secondary" id="saveFormulaBtn">
+                                    <span class="icon icon-save" aria-hidden="true"></span>
+                                    Save Current
+                                </button>
+                            </div>
+                        </div>
+                        <div class="saved-list" id="savedFormulasList"></div>
+                    </div>
+                </div>
 
             <!-- Right Panel - Functions -->
             <div class="panel">

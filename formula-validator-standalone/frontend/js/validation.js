@@ -1,10 +1,11 @@
-import { state, clearValidationTimeout, getConstantOverrides } from './state.js';
+import { state, clearValidationTimeout, getConstantOverrides, updateSavedFormulaResult } from './state.js';
 import {
   updateValidationStatus,
   showErrors,
   updateResult,
   updateBackendIndicator,
-  addToHistory
+  addToHistory,
+  renderSavedFormulas
 } from './ui.js';
 
 function buildRequestPayload(formulaText) {
@@ -26,6 +27,14 @@ function buildRequestPayload(formulaText) {
   payload.constants = constantOverrides;
 
   return payload;
+}
+
+function updateSavedFormulaResultByFormula(formula, result) {
+  const match = state.savedFormulas.find(entry => entry.formula === formula);
+  if (match) {
+    updateSavedFormulaResult(match.id, result);
+    renderSavedFormulas();
+  }
 }
 
 function normalizeFormulaSymbols(formula, caretIndex = null) {
@@ -125,6 +134,7 @@ export async function performBackendValidation({ allowToast = false, focusError 
       updateResult(validationResult.result);
       addToHistory(normalizedFormula, validationResult.result);
       state.editor.session.clearAnnotations();
+      updateSavedFormulaResultByFormula(normalizedFormula, validationResult.result);
     } else {
       updateValidationStatus('error');
       const error = validationResult.error || 'Invalid formula';

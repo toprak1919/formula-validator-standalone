@@ -1,10 +1,16 @@
-import { state, isBackendConstant } from './state.js';
+import { state, isBackendConstant, getSavedFormulas, removeSavedFormula } from './state.js';
 import { escapeHtml } from './utils.js';
 
 let validationCallback = () => {};
 
+let editorExpandedCallback = () => {};
+
 export function setValidationCallback(callback) {
   validationCallback = typeof callback === 'function' ? callback : () => {};
+}
+
+export function setEditorExpandedCallback(callback) {
+  editorExpandedCallback = typeof callback === 'function' ? callback : () => {};
 }
 
 export function showToast(message, type = 'info', duration = 3000) {
@@ -122,6 +128,70 @@ export function renderHistory() {
       state.editor.setValue(item.formula, 1);
     });
     historyList.appendChild(historyItem);
+  });
+}
+
+export function renderSavedFormulas() {
+  const list = document.getElementById('savedFormulasList');
+  if (!list) return;
+  list.innerHTML = '';
+
+  const formulas = getSavedFormulas();
+  if (!formulas.length) {
+    const empty = document.createElement('div');
+    empty.className = 'saved-empty';
+    empty.textContent = 'No saved formulas yet. Save one to reuse it later.';
+    list.appendChild(empty);
+    return;
+  }
+
+  formulas.forEach(entry => {
+    const row = document.createElement('div');
+    row.className = 'saved-item';
+
+    const label = document.createElement('div');
+    label.className = 'saved-item-label';
+    label.innerHTML = `
+      <span class="saved-name">${escapeHtml(entry.name)}</span>
+      <span class="saved-formula">${escapeHtml(entry.formula)}</span>
+      <span class="saved-formula">${entry.result !== null && entry.result !== undefined ? `Result: ${Number(entry.result).toFixed(4)}` : 'Result: —'}</span>
+    `;
+
+    const actions = document.createElement('div');
+    actions.className = 'saved-item-actions';
+
+    const runBtn = document.createElement('button');
+    runBtn.type = 'button';
+    runBtn.className = 'icon-btn';
+    runBtn.title = 'Run formula';
+    runBtn.setAttribute('aria-label', `Run ${entry.name}`);
+    runBtn.innerHTML = '<span class="icon icon-chevron-right" aria-hidden="true"></span>';
+    runBtn.addEventListener('click', () => {
+      if (!state.editor) return;
+      editorExpandedCallback();
+      state.editor.setValue(entry.formula, 1);
+      state.editor.focus();
+      validationCallback();
+    });
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.className = 'icon-btn';
+    deleteBtn.title = 'Delete saved formula';
+    deleteBtn.setAttribute('aria-label', `Delete ${entry.name}`);
+    deleteBtn.innerHTML = '<span class="icon icon-trash" aria-hidden="true"></span>';
+    deleteBtn.addEventListener('click', () => {
+      removeSavedFormula(entry.id);
+      renderSavedFormulas();
+      showToast(`Removed "${entry.name}"`, 'info');
+    });
+
+    actions.appendChild(runBtn);
+    actions.appendChild(deleteBtn);
+
+    row.appendChild(label);
+    row.appendChild(actions);
+    list.appendChild(row);
   });
 }
 
@@ -491,5 +561,45 @@ export function setupSourcePanelToggle() {
   toggle.addEventListener('click', () => {
     const collapsed = !panel.classList.contains('collapsed');
     applyState(collapsed);
+  });
+}
+
+export function setupEditorCollapseToggle() {
+  const container = document.getElementById('editorContainer');
+  const toggle = document.getElementById('editorCollapseToggle');
+  if (!container || !toggle) return;
+
+  const icon = toggle.querySelector('.icon');
+
+  const applyState = (collapsed) => {
+    container.classList.toggle('collapsed', collapsed);
+    toggle.setAttribute('aria-expanded', String(!collapsed));
+    toggle.setAttribute('aria-label', collapsed ? 'Expand editor' : 'Collapse editor');
+    toggle.title = collapsed ? 'Expand editor' : 'Collapse editor';
+    if (icon) {
+      icon.className = `icon ${collapsed ? 'icon-chevron-down' : 'icon-chevron-up'}`;
+    }
+    if (state.editor) {
+      setTimeout(() => {
+        try {
+          state.editor.resize(true);
+        } catch (err) {
+          /* ignore */
+        }
+      }, 0);
+    }
+  };
+
+  applyState(false);
+
+  toggle.addEventListener('click', () => {
+    const collapsed = !container.classList.contains('collapsed');
+    applyState(collapsed);
+  });
+
+  setEditorExpandedCallback((collapsed) => {
+    if (container.classList.contains('collapsed')) {
+      applyState(false);
+    }
   });
 }

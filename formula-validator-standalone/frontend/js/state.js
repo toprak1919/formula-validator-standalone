@@ -1,4 +1,5 @@
 export const COMPLETION_USAGE_KEY = 'formulaCompletionUsage_v2';
+const SAVED_FORMULAS_KEY = 'formulaSavedFormulas_v1';
 
 function loadCompletionUsage() {
   try {
@@ -14,6 +15,23 @@ function persistCompletionUsage(completionUsage) {
     localStorage.setItem(COMPLETION_USAGE_KEY, JSON.stringify(completionUsage));
   } catch (err) {
     console.warn('Failed to persist completion usage', err);
+  }
+}
+
+function loadSavedFormulas() {
+  try {
+    return JSON.parse(localStorage.getItem(SAVED_FORMULAS_KEY) || '[]');
+  } catch (err) {
+    console.warn('Failed to load saved formulas', err);
+    return [];
+  }
+}
+
+function persistSavedFormulas(formulas) {
+  try {
+    localStorage.setItem(SAVED_FORMULAS_KEY, JSON.stringify(formulas));
+  } catch (err) {
+    console.warn('Failed to persist saved formulas', err);
   }
 }
 
@@ -34,6 +52,7 @@ export const state = {
   },
   constants: {},
   backendConstants: {},
+  savedFormulas: loadSavedFormulas(),
   completionUsage: loadCompletionUsage(),
   sampleFormulas: [
     '($temperature * #conversion_factor) + 32',
@@ -123,6 +142,13 @@ function normalizeConstantId(id) {
   return trimmed.startsWith('#') ? trimmed : `#${trimmed}`;
 }
 
+function createId() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return `formula-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
 export function setBackendConstants(constantsArray) {
   const backend = {};
   if (Array.isArray(constantsArray)) {
@@ -187,4 +213,34 @@ export function getConstantOverrides() {
 export function isBackendConstant(id) {
   const normalizedId = normalizeConstantId(id);
   return Object.prototype.hasOwnProperty.call(state.backendConstants, normalizedId);
+}
+
+export function getSavedFormulas() {
+  return state.savedFormulas;
+}
+
+export function addSavedFormula({ name, formula, result = null }) {
+  const trimmedName = (name || '').trim();
+  const fallbackName = `Formula ${state.savedFormulas.length + 1}`;
+  const entry = {
+    id: createId(),
+    name: trimmedName || fallbackName,
+    formula,
+    result
+  };
+  state.savedFormulas.unshift(entry);
+  persistSavedFormulas(state.savedFormulas);
+  return entry;
+}
+
+export function removeSavedFormula(id) {
+  state.savedFormulas = state.savedFormulas.filter(item => item.id !== id);
+  persistSavedFormulas(state.savedFormulas);
+}
+
+export function updateSavedFormulaResult(id, result) {
+  const entry = state.savedFormulas.find(item => item.id === id);
+  if (!entry) return;
+  entry.result = result;
+  persistSavedFormulas(state.savedFormulas);
 }

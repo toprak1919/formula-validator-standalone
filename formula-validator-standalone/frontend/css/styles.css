@@ -425,6 +425,19 @@
             justify-content: space-between;
         }
 
+        .formula-panel-header {
+            margin-bottom: 0;
+        }
+
+        .formula-panel-header .panel-title-text {
+            margin-bottom: 0;
+        }
+
+        .formula-actions {
+            display: flex;
+            gap: 6px;
+        }
+
         .panel-title-text {
             display: flex;
             align-items: center;
@@ -535,6 +548,50 @@
             background: currentColor;
             transform: rotate(45deg);
             border-radius: 1px;
+        }
+
+        .icon-save::before {
+            content: '';
+            position: absolute;
+            left: 3px;
+            top: 3px;
+            width: 10px;
+            height: 8px;
+            border: 2px solid currentColor;
+            border-bottom: none;
+            border-top-left-radius: 2px;
+            border-top-right-radius: 2px;
+        }
+
+        .icon-save::after {
+            content: '';
+            position: absolute;
+            left: 4px;
+            bottom: 3px;
+            width: 8px;
+            height: 3px;
+            background: currentColor;
+            border-radius: 1px;
+        }
+
+        .icon-chevron-left::before,
+        .icon-chevron-right::before {
+            content: '';
+            position: absolute;
+            top: 4px;
+            bottom: 4px;
+            border-top: 2px solid transparent;
+            border-bottom: 2px solid transparent;
+        }
+
+        .icon-chevron-left::before {
+            left: 5px;
+            border-right: 6px solid currentColor;
+        }
+
+        .icon-chevron-right::before {
+            right: 5px;
+            border-left: 6px solid currentColor;
         }
 
         /* Document icon */
@@ -895,6 +952,7 @@
 
         .editor-container {
             position: relative;
+            transition: height 0.2s ease;
         }
 
         #editor {
@@ -905,6 +963,26 @@
             font-family: 'JetBrains Mono', monospace;
             font-size: 15px;
             transition: all 0.2s ease;
+        }
+
+        .editor-container.collapsed {
+            height: 60px;
+            min-height: 60px;
+        }
+
+        .editor-container.collapsed #editor {
+            height: 48px;
+        }
+
+        .editor-container.collapsed .ace_editor {
+            min-height: 48px;
+        }
+
+        .editor-container.collapsed ~ .errors-container,
+        .editor-container.collapsed ~ .result-section,
+        .editor-container.collapsed ~ .formula-history,
+        .editor-container.collapsed ~ .saved-formulas {
+            display: none;
         }
 
         #editor:focus {
@@ -1328,6 +1406,98 @@
         .history-result {
             color: var(--text-muted);
             font-size: 11px;
+        }
+
+        .saved-formulas {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-secondary);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .saved-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .saved-title {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        .saved-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .saved-input {
+            border: 1px solid var(--border-secondary);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 13px;
+            min-width: 180px;
+        }
+
+        .saved-input:focus {
+            border-color: var(--accent-primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+        }
+
+        .saved-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: clamp(120px, 22vh, 220px);
+            overflow-y: auto;
+            overscroll-behavior: contain;
+        }
+
+        .saved-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 8px 10px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-secondary);
+            border-radius: 6px;
+        }
+
+        .saved-item-label {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--text-primary);
+        }
+
+        .saved-item-label .saved-name {
+            font-weight: 600;
+        }
+
+        .saved-item-label .saved-formula {
+            color: var(--text-muted);
+        }
+
+        .saved-item-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .saved-empty {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-style: italic;
         }
 
         .functions-grid {

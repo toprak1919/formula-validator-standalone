@@ -1,4 +1,4 @@
-import { state, setEditor, setValidationTimeout, setBackendConstants } from './state.js';
+import { state, setEditor, setValidationTimeout, setBackendConstants, addSavedFormula } from './state.js';
 import { createCustomCompleter } from './autocomplete.js';
 import {
   renderMeasuredValues,
@@ -10,7 +10,9 @@ import {
   setValidationCallback,
   setupSourceSearch,
   setupAddSourceButtons,
-  setupSourcePanelToggle
+  setupSourcePanelToggle,
+  setupEditorCollapseToggle,
+  renderSavedFormulas
 } from './ui.js';
 import { performBackendValidation } from './validation.js';
 import { loadTestCases, runTests, exportTestResults } from './tests.js';
@@ -230,6 +232,42 @@ function setupValidationCallback() {
   setValidationCallback(() => performBackendValidation());
 }
 
+function setupSaveFormulaButton() {
+  const saveBtn = document.getElementById('saveFormulaBtn');
+  const nameInput = document.getElementById('saveFormulaName');
+  if (!saveBtn) return;
+
+  saveBtn.addEventListener('click', () => {
+    if (!state.editor) return;
+    const formula = state.editor.getValue().trim();
+    if (!formula) {
+      showToast('Enter a formula before saving.', 'info');
+      return;
+    }
+
+    const nameValue = nameInput ? nameInput.value : '';
+
+    const resultText = document.getElementById('resultValue')?.textContent;
+    const numericResult = resultText && resultText !== 'Enter a valid formula...' ? Number(resultText) : null;
+
+    const entry = addSavedFormula({
+      name: nameValue,
+      formula,
+      result: Number.isFinite(numericResult) ? numericResult : null
+    });
+
+    renderSavedFormulas();
+    if (nameInput) {
+      nameInput.value = `Formula ${state.savedFormulas.length + 1}`;
+    }
+    showToast(`Saved "${entry.name}"`, 'success');
+  });
+
+  if (nameInput) {
+    nameInput.value = `Formula ${state.savedFormulas.length + 1}`;
+  }
+}
+
 function setupTabs() {
   document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
@@ -260,11 +298,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupSourceSearch();
   setupAddSourceButtons();
   setupSourcePanelToggle();
+  setupEditorCollapseToggle();
   setupClipboardButtons();
   setupToolbarButtons();
   setupThemeToggle();
   setupTabs();
   setupResultPanel();
+  setupSaveFormulaButton();
 
   const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
   const savedTheme = localStorage.getItem('theme');
@@ -276,6 +316,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadTestCases();
   renderMeasuredValues();
   renderConstants();
+  renderSavedFormulas();
 
   setTimeout(() => performBackendValidation(), 100);
 });
