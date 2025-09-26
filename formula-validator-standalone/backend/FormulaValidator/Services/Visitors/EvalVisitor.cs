@@ -13,17 +13,33 @@ namespace FormulaValidator.Services.Visitors
     {
         public readonly HashSet<string> Variables = new(StringComparer.OrdinalIgnoreCase);
         public readonly HashSet<string> VariablesWithUnit = new(StringComparer.OrdinalIgnoreCase);
+        public readonly HashSet<string> VariablesWithIndex = new(StringComparer.OrdinalIgnoreCase);
+        public readonly HashSet<string> VariablesWithoutIndex = new(StringComparer.OrdinalIgnoreCase);
         public readonly HashSet<string> Constants = new(StringComparer.OrdinalIgnoreCase);
 
         public override object? VisitVarRef([NotNull] FormulaParser.VarRefContext context)
         {
-            var name = context.IDENT(0).GetText();
+            var name = context.IDENT().GetText();
             Variables.Add(name);
 
-            // Has ".unit" ?
-            if (context.IDENT().Length == 2)
+            bool hasIndex = false;
+
+            foreach (var suffix in context.varRefSuffix())
             {
-                VariablesWithUnit.Add(name);
+                if (suffix.DOT() != null)
+                {
+                    VariablesWithUnit.Add(name);
+                }
+                else if (suffix.LBRACK() != null)
+                {
+                    VariablesWithIndex.Add(name);
+                    hasIndex = true;
+                }
+            }
+
+            if (!hasIndex)
+            {
+                VariablesWithoutIndex.Add(name);
             }
 
             return null;
@@ -47,12 +63,108 @@ namespace FormulaValidator.Services.Visitors
 
         public EvalVisitor(IEnumerable<MeasuredValue> mvs, IEnumerable<Constant> consts)
         {
-            _measured = mvs.ToDictionary(m => TrimDollar(m.Id), StringComparer.OrdinalIgnoreCase);
-            _constants = consts.ToDictionary(c => TrimHash(c.Id), StringComparer.OrdinalIgnoreCase);
+            _measured = BuildMeasuredMap(mvs);
+            _constants = BuildConstantMap(consts);
         }
 
-        private static string TrimDollar(string id) => id.StartsWith("$") ? id[1..] : id;
-        private static string TrimHash(string id) => id.StartsWith("#") ? id[1..] : id;
+        private static IReadOnlyDictionary<string, MeasuredValue> BuildMeasuredMap(IEnumerable<MeasuredValue>? values)
+        {
+            var lookup = new Dictionary<string, MeasuredValue>(StringComparer.OrdinalIgnoreCase);
+
+            if (values is null)
+            {
+                return lookup;
+            }
+
+            foreach (var value in values)
+            {
+                var key = NormalizeVariableId(value.Id);
+                if (string.IsNullOrEmpty(key))
+                {
+                    continue;
+                }
+
+                if (lookup.ContainsKey(key))
+                {
+                    throw new InvalidOperationException($"Duplicate variable: ${key}");
+                }
+
+                lookup[key] = value;
+            }
+
+            return lookup;
+        }
+
+        private static IReadOnlyDictionary<string, Constant> BuildConstantMap(IEnumerable<Constant>? values)
+        {
+            var lookup = new Dictionary<string, Constant>(StringComparer.OrdinalIgnoreCase);
+
+            if (values is null)
+            {
+                return lookup;
+            }
+
+            foreach (var constant in values)
+            {
+                var key = NormalizeConstantId(constant.Id);
+                if (string.IsNullOrEmpty(key))
+                {
+                    continue;
+                }
+
+                if (lookup.ContainsKey(key))
+                {
+                    throw new InvalidOperationException($"Duplicate constant: #{key}");
+                }
+
+                lookup[key] = constant;
+            }
+
+            return lookup;
+        }
+
+        private static string NormalizeVariableId(string id)
+        {
+            var trimmed = (id ?? string.Empty).Trim();
+            if (trimmed.StartsWith("$", StringComparison.Ordinal))
+            {
+                trimmed = trimmed.TrimStart('$');
+            }
+
+            return trimmed.Trim();
+        }
+
+        private static string NormalizeConstantId(string id)
+        {
+            var trimmed = (id ?? string.Empty).Trim();
+            if (trimmed.StartsWith("#", StringComparison.Ordinal))
+            {
+                trimmed = trimmed.TrimStart('#');
+            }
+
+            return trimmed.Trim();
+        }
+
+        private static int NormalizeIndex(double rawIndex, string variableName)
+        {
+            if (double.IsNaN(rawIndex) || double.IsInfinity(rawIndex))
+            {
+                throw new InvalidOperationException($"Index for variable '{variableName}' must evaluate to a finite number.");
+            }
+
+            var rounded = (int)Math.Round(rawIndex);
+            if (Math.Abs(rawIndex - rounded) > 1e-9)
+            {
+                throw new InvalidOperationException($"Index for variable '{variableName}' must be an integer.");
+            }
+
+            if (rounded < 0)
+            {
+                throw new InvalidOperationException($"Index for variable '{variableName}' must be non-negative.");
+            }
+
+            return rounded;
+        }
 
         public override double VisitFormula([NotNull] FormulaParser.FormulaContext context)
             => Visit(context.expr());
@@ -65,24 +177,82 @@ namespace FormulaValidator.Services.Visitors
 
         public override double VisitVarPrimary([NotNull] FormulaParser.VarPrimaryContext context)
         {
-            var v = context.varRef();
-            var name = v.IDENT(0).GetText();
+            var varRef = context.varRef();
+            var name = varRef.IDENT().GetText();
 
-            if (!_measured.TryGetValue(name, out var mv))
+            if (!_measured.TryGetValue(name, out var measuredValue))
+            {
                 throw new InvalidOperationException($"Undefined variable: ${name}");
+            }
 
-            // no unit suffix -> plain value
-            if (v.IDENT().Length == 1) return mv.Value;
+            int? requestedIndex = null;
+            string? requestedUnit = null;
 
-            // has ".unit" -> convert using UnitsNet
-            var targetUnit = v.IDENT(1).GetText();
-            var fromUnit = (mv.Unit ?? string.Empty).Trim();
+            foreach (var suffix in varRef.varRefSuffix())
+            {
+                if (suffix.LBRACK() != null)
+                {
+                    if (requestedIndex.HasValue)
+                    {
+                        throw new InvalidOperationException($"Variable '{name}' is used with multiple indices; only one dimension is supported.");
+                    }
 
+                    var rawIndex = Visit(suffix.expr());
+                    requestedIndex = NormalizeIndex(rawIndex, name);
+                }
+                else if (suffix.DOT() != null)
+                {
+                    requestedUnit = suffix.IDENT().GetText();
+                }
+            }
+
+            var hasVector = measuredValue.Values is not null && measuredValue.Values.Count > 0;
+            double extractedValue;
+
+            if (hasVector)
+            {
+                if (!requestedIndex.HasValue)
+                {
+                    throw new InvalidOperationException($"Variable '{name}' is non-scalar. Use an index like '${name}[i]'.");
+                }
+
+                if (requestedIndex.Value >= measuredValue.Values!.Count)
+                {
+                    throw new InvalidOperationException($"Index {requestedIndex.Value} is out of range for variable '{name}'.");
+                }
+
+                extractedValue = measuredValue.Values[requestedIndex.Value];
+            }
+            else
+            {
+                if (!measuredValue.Value.HasValue)
+                {
+                    throw new InvalidOperationException($"Variable '{name}' has no value defined.");
+                }
+
+                if (requestedIndex.HasValue)
+                {
+                    throw new InvalidOperationException($"Variable '{name}' is scalar but used with an index.");
+                }
+
+                extractedValue = measuredValue.Value.Value;
+            }
+
+            if (requestedUnit is null)
+            {
+                return extractedValue;
+            }
+
+            var fromUnit = (measuredValue.Unit ?? string.Empty).Trim();
             if (string.IsNullOrWhiteSpace(fromUnit))
-                throw new InvalidOperationException($"Variable '{name}' has no unit defined but is used with '.{targetUnit}'.");
+            {
+                throw new InvalidOperationException($"Variable '{name}' has no unit defined but is used with '.{requestedUnit}'.");
+            }
 
-            if (!UnitResolver.TryConvert(mv.Value, fromUnit, targetUnit, out var converted))
-                throw new InvalidOperationException($"Cannot convert variable '{name}' from '{fromUnit}' to '{targetUnit}'.");
+            if (!UnitResolver.TryConvert(extractedValue, fromUnit, requestedUnit, out var converted))
+            {
+                throw new InvalidOperationException($"Cannot convert variable '{name}' from '{fromUnit}' to '{requestedUnit}'.");
+            }
 
             return converted;
         }
@@ -196,4 +366,3 @@ namespace FormulaValidator.Services.Visitors
         }
     }
 }
-

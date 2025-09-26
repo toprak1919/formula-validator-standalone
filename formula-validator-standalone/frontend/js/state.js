@@ -48,7 +48,8 @@ export const state = {
     '$pressure': { name: 'Pressure', value: 101.3 },
     '$humidity': { name: 'Humidity', value: 65.2 },
     '$flow_rate': { name: 'Flow Rate', value: 12.8 },
-    '$voltage': { name: 'Voltage', value: 220.0, unit: 'V' }
+    '$voltage': { name: 'Voltage', value: 220.0, unit: 'V' },
+    '$temperatures': { name: 'Temperature Series', values: [21.5, 23.1, 24.8], unit: 'C' }
   },
   constants: {},
   backendConstants: {},
@@ -63,7 +64,8 @@ export const state = {
     'log10($voltage) * #gravity',
     '($flow_rate * #gravity) / $pressure',
     'abs($temperature - #max_temp)',
-    'round($humidity / 10, 1) * #conversion_factor'
+    'round($humidity / 10, 1) * #conversion_factor',
+    'mean($temperatures[0], $temperatures[1], $temperatures[2])'
   ],
   functionsDB: {
     basic: [

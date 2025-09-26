@@ -60,19 +60,51 @@ namespace FormulaValidator.Services
                 var collector = new SymbolCollector();
                 collector.Visit(tree);
 
-                // undefined variables
-                foreach (var v in collector.Variables)
+                var measuredLookup = BuildMeasuredLookup(request.MeasuredValues, out var measuredError);
+                if (measuredError is not null)
                 {
-                    if (!request.MeasuredValues.Any(m => string.Equals(m.Id.TrimStart('$'), v, StringComparison.OrdinalIgnoreCase)))
+                    result.Error = measuredError;
+                    return result;
+                }
+
+                foreach (var variable in collector.Variables)
+                {
+                    if (!measuredLookup.TryGetValue(variable, out _))
                     {
-                        result.Error = $"Undefined variable: ${v}";
+                        result.Error = $"Undefined variable: ${variable}";
+                        return result;
+                    }
+                }
+
+                foreach (var variable in collector.VariablesWithIndex)
+                {
+                    if (!measuredLookup.TryGetValue(variable, out var mv) || mv.Values is null || mv.Values.Count == 0)
+                    {
+                        result.Error = $"Variable '{variable}' is scalar but is used with an index.";
+                        return result;
+                    }
+                }
+
+                foreach (var variable in collector.VariablesWithIndex)
+                {
+                    if (collector.VariablesWithoutIndex.Contains(variable))
+                    {
+                        result.Error = $"Variable '{variable}' is used both with and without an index.";
+                        return result;
+                    }
+                }
+
+                foreach (var variable in collector.VariablesWithoutIndex)
+                {
+                    if (measuredLookup.TryGetValue(variable, out var mv) && mv.Values is not null && mv.Values.Count > 0)
+                    {
+                        result.Error = $"Variable '{variable}' is non-scalar. Use an index like '${variable}[i]'.";
                         return result;
                     }
                 }
 
                 var constantLookup = MergeConstants(_constantRepository.GetAll(), request.Constants);
 
-                // undefined constants
                 foreach (var c in collector.Constants)
                 {
                     if (!constantLookup.ContainsKey(c))
@@ -82,19 +114,18 @@ namespace FormulaValidator.Services
                     }
                 }
 
-                // For variables used with .unit ensure the source has units
-                foreach (var v in collector.VariablesWithUnit)
+                foreach (var variable in collector.VariablesWithUnit)
                 {
-                    var mv = request.MeasuredValues.First(m => string.Equals(m.Id.TrimStart('$'), v, StringComparison.OrdinalIgnoreCase));
+                    var mv = measuredLookup[variable];
                     if (string.IsNullOrWhiteSpace(mv.Unit))
                     {
-                        result.Error = $"Variable '{v}' has no unit defined but is used with a unit suffix.";
+                        result.Error = $"Variable '{variable}' has no unit defined but is used with a unit suffix.";
                         return result;
                     }
                 }
 
                 // --- 3) Evaluate
-                var evaluator = new EvalVisitor(request.MeasuredValues, constantLookup.Values);
+                var evaluator = new EvalVisitor(measuredLookup.Values, constantLookup.Values);
                 var value = evaluator.Visit(tree);
 
                 if (double.IsNaN(value))
@@ -130,6 +161,67 @@ namespace FormulaValidator.Services
             }
 
             return result;
+        }
+
+        private static Dictionary<string, MeasuredValue> BuildMeasuredLookup(
+            IEnumerable<MeasuredValue>? measuredValues,
+            out string? error)
+        {
+            error = null;
+            var lookup = new Dictionary<string, MeasuredValue>(StringComparer.OrdinalIgnoreCase);
+
+            if (measuredValues is null)
+            {
+                return lookup;
+            }
+
+            foreach (var measuredValue in measuredValues)
+            {
+                var normalizedId = NormalizeVariableId(measuredValue.Id);
+                if (string.IsNullOrEmpty(normalizedId))
+                {
+                    error = "Measured value id cannot be empty.";
+                    return lookup;
+                }
+
+                if (lookup.ContainsKey(normalizedId))
+                {
+                    error = $"Duplicate variable: ${normalizedId}";
+                    return lookup;
+                }
+
+                var hasScalar = measuredValue.Value.HasValue;
+                var hasVector = measuredValue.Values is not null && measuredValue.Values.Count > 0;
+
+                if (hasScalar && hasVector)
+                {
+                    error = $"Variable '${normalizedId}' cannot define both 'value' and 'values'.";
+                    return lookup;
+                }
+
+                if (!hasScalar && !hasVector)
+                {
+                    error = $"Variable '${normalizedId}' must define either 'value' or 'values'.";
+                    return lookup;
+                }
+
+                lookup[normalizedId] = measuredValue;
+            }
+
+            return lookup;
+        }
+
+        private static string NormalizeVariableId(string id)
+        {
+            var trimmed = (id ?? string.Empty).Trim();
+            if (trimmed.Length == 0)
+            {
+                return string.Empty;
+            }
+
+            return trimmed.StartsWith("$", StringComparison.Ordinal)
+                ? trimmed.TrimStart('$').Trim()
+                : trimmed;
         }
 
         private static Dictionary<string, Constant> MergeConstants(

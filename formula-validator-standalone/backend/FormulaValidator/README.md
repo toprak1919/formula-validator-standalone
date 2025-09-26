@@ -12,7 +12,7 @@ Overview
 
 DSL Reference
 - Numbers: `123`, `3.14`, `1e-3`.
-- Variables: `$name` or `$name.unit` (unit alias is case-insensitive).
+- Variables: `$name`, `$name.unit`, `$name[index]`, `$name[index].unit` (unit alias is case-insensitive, index is zero-based).
 - Constants: `#name`.
 - Functions (case-insensitive): `sin, cos, tan, ln, log10, log2, exp, sqrt, pow, floor, ceil, round, abs, sign|sgn, min, max, sum, mean|avg, if, mod, fact, gcd, lcm`.
 - Operators (high → low): `^` | `* / %` | `+ -` | `>, <, >=, <=, ==, !=`.
@@ -30,7 +30,7 @@ Units
 Grammar Notes
 - File: `Parsing/Formula.g4`.
 - Primary forms: number, variable ref, constant ref, function call, parenthesized expression.
-- `varRef`: `$IDENT` or `$IDENT . IDENT` (unit suffix).
+- `varRef`: `$IDENT` optionally followed by `.[unit]` and/or `[expr]` suffixes (indexes are zero-based and must resolve to whole numbers).
 - `%` is modulo; comparisons are allowed anywhere an expression appears.
 - Current `^` evaluation is left-associative by choice. For right-associative power, evaluate from right to left in `VisitPow`.
 
@@ -54,4 +54,4 @@ Extending
 - Add functions: update `FunctionRegistry.Functions`.
 - Add units: extend `UnitResolver` with new quantity alias maps and conversions via UnitsNet.
 - Change syntax: edit `Formula.g4`, then adapt `EvalVisitor`/`SymbolCollector`.
-
+- Non-scalar variables: provide `values` (an array of numbers) instead of `value` in `MeasuredValue`; formulas must access them via `$name[index]` (e.g., `$temps[0]`). Mixing indexed and non-indexed usage of the same variable is rejected.

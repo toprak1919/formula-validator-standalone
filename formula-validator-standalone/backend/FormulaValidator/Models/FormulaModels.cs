@@ -11,7 +11,8 @@ namespace FormulaValidator.Models
     {
         public string Id { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
-        public double Value { get; set; }
+        public double? Value { get; set; }
+        public List<double>? Values { get; set; }
         // Optional unit (e.g., "meter", "au"). If null/empty, value is treated as unitless
         public string? Unit { get; set; }
     }

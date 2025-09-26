@@ -124,13 +124,40 @@ function determineUnitCategory(unit) {
   return info ? info.category : null;
 }
 
+function isVectorValue(entry) {
+  return Array.isArray(entry?.values) && entry.values.length > 0;
+}
+
+function formatVectorPreview(values, max = 6) {
+  if (!Array.isArray(values) || !values.length) return '[]';
+  const rounded = values.map((value) => {
+    const numeric = typeof value === 'number' ? value : Number.parseFloat(value);
+    if (!Number.isFinite(numeric)) return 'NaN';
+    return Math.abs(numeric) >= 1e4 || Math.abs(numeric) < 1e-3
+      ? numeric.toExponential(2)
+      : Number(numeric.toFixed(3)).toString();
+  });
+  const preview = rounded.slice(0, max).join(', ');
+  const suffix = values.length > max ? ', …' : '';
+  return `[${preview}${suffix}]`;
+}
+
 function renderSymbolDoc(type, id, data) {
-  const valueText = typeof data.value === 'number' && !Number.isNaN(data.value) ? data.value : '—';
+  const vector = isVectorValue(data);
+  const valueText = vector
+    ? formatVectorPreview(data.values)
+    : (typeof data.value === 'number' && !Number.isNaN(data.value)
+      ? data.value
+      : (data.value ?? '—'));
   const rows = [
     { label: 'Name', value: escapeHtml(data.name || id) },
-    { label: 'Value', value: escapeHtml(valueText) },
+    { label: vector ? 'Values' : 'Value', value: escapeHtml(String(valueText)) },
     { label: 'Unit', value: escapeHtml(data.unit || 'unitless') }
   ];
+
+  if (vector) {
+    rows.push({ label: 'Length', value: escapeHtml(String(data.values.length)) });
+  }
 
   return `
     <div class="completion-doc">
@@ -292,7 +319,10 @@ function buildMeasuredValueCompletions(prefix) {
     if (prefix && !keyLower.includes(prefixLower)) return;
 
     const usageId = `variable:${keyLower}`;
-    const unitMeta = data.unit ? `variable • ${data.unit}` : 'variable • unitless';
+    const descriptorParts = ['variable'];
+    descriptorParts.push(isVectorValue(data) ? 'list' : 'scalar');
+    descriptorParts.push(data.unit ? data.unit : 'unitless');
+    const unitMeta = descriptorParts.join(' • ');
 
     completions.push(createCompletionOption({
       caption: key,

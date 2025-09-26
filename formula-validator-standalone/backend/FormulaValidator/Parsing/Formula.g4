@@ -30,7 +30,10 @@ primary         : NUMBER                             # numberPrimary
                 | LPAREN expr RPAREN                 # parenPrimary
                 ;
 
-varRef          : DOLLAR IDENT (DOT IDENT)? ;
+varRef          : DOLLAR IDENT varRefSuffix* ;
+varRefSuffix    : DOT IDENT
+                | LBRACK expr RBRACK
+                ;
 constRef        : HASH IDENT ;
 funcCall        : IDENT LPAREN (expr (COMMA expr)*)? RPAREN ;
 
@@ -57,8 +60,9 @@ COMMA           : ',';
 DOT             : '.';
 DOLLAR          : '$';
 HASH            : '#';
+LBRACK          : '[';
+RBRACK          : ']';
 
 WS              : [ \t\r\n]+ -> skip ;
 
 fragment DIGIT  : [0-9] ;
-

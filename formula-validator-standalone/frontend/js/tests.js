@@ -39,12 +39,34 @@ function updateTestProgress(current, total, results) {
 async function runSingleTest(testCase) {
   const requestData = {
     formula: testCase.formula,
-    measuredValues: Object.entries(state.measuredValues).map(([id, data]) => ({
-      id,
-      name: data.name,
-      value: data.value,
-      unit: data.unit
-    })),
+    measuredValues: Object.entries(state.measuredValues).map(([id, data]) => {
+      const entry = {
+        id,
+        name: data.name
+      };
+
+      if (Array.isArray(data.values) && data.values.length > 0) {
+        const vectorValues = data.values
+          .map((value) => (typeof value === 'number' ? value : Number.parseFloat(value)))
+          .filter((value) => !Number.isNaN(value));
+        if (vectorValues.length > 0) {
+          entry.values = vectorValues;
+        }
+      } else if (data.value !== undefined && data.value !== null) {
+        const numericValue = typeof data.value === 'number'
+          ? data.value
+          : Number.parseFloat(data.value);
+        if (!Number.isNaN(numericValue)) {
+          entry.value = numericValue;
+        }
+      }
+
+      if (data.unit) {
+        entry.unit = data.unit;
+      }
+
+      return entry;
+    }),
     constants: getConstantOverrides()
   };
 

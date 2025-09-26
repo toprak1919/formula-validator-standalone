@@ -5,6 +5,53 @@ let validationCallback = () => {};
 
 let editorExpandedCallback = () => {};
 
+function isVectorValue(entry) {
+  return Array.isArray(entry?.values) && entry.values.length > 0;
+}
+
+function formatMeasuredValue(entry) {
+  if (isVectorValue(entry)) {
+    const preview = entry.values
+      .map((v) => (typeof v === 'number' && Number.isFinite(v) ? v : Number.parseFloat(v)))
+      .map((v) => (Number.isNaN(v) ? 'NaN' : String(v)))
+      .join(', ');
+    return `[${preview}]`;
+  }
+
+  if (entry && entry.value !== undefined && entry.value !== null) {
+    return String(entry.value);
+  }
+
+  return '';
+}
+
+function toggleHidden(element, hidden) {
+  if (!element) return;
+  element.classList.toggle('hidden', hidden);
+}
+
+function parseVectorInput(raw, variableName) {
+  const trimmed = (raw || '').trim();
+  if (!trimmed) {
+    throw new Error(`Provide at least one value for ${variableName || 'the variable'}.`);
+  }
+
+  const parts = trimmed.split(/[,\s]+/).filter(Boolean);
+  if (!parts.length) {
+    throw new Error(`Provide at least one numeric value for ${variableName || 'the variable'}.`);
+  }
+
+  const numbers = parts.map((token) => {
+    const value = Number.parseFloat(token);
+    if (Number.isNaN(value)) {
+      throw new Error(`"${token}" is not a valid number.`);
+    }
+    return value;
+  });
+
+  return numbers;
+}
+
 export function setValidationCallback(callback) {
   validationCallback = typeof callback === 'function' ? callback : () => {};
 }
@@ -256,6 +303,12 @@ function createSourceItem(key, data, type) {
   item.tabIndex = 0;
   item.title = `Insert ${key} into editor`;
 
+  const measured = type === 'measured';
+  const isVector = measured && isVectorValue(data);
+  const displayValue = measured ? formatMeasuredValue(data) : (data.value ?? '');
+  const valueLabel = measured && isVector ? 'Values' : 'Value';
+  const unitSuffix = measured && data.unit ? ` (${escapeHtml(data.unit)})` : '';
+
   item.innerHTML = `
     <div class="source-header">
       <div class="source-name">${escapeHtml(data.name)}</div>
@@ -269,7 +322,7 @@ function createSourceItem(key, data, type) {
       </div>
     </div>
     <div class="source-code">${escapeHtml(key)}</div>
-    <div class="source-value">Value: ${escapeHtml(data.value)}${data.unit ? ' (' + escapeHtml(data.unit) + ')' : ''}</div>
+    <div class="source-value">${valueLabel}: ${escapeHtml(String(displayValue))}${unitSuffix}${measured && isVector ? ` · <span class="source-meta">${data.values.length} items</span>` : ''}</div>
   `;
 
   const handleInsert = (e) => {
@@ -326,6 +379,11 @@ function createSourceItem(key, data, type) {
 function showEditForm(item, key, data, type) {
   item.classList.add('editing');
 
+  const isMeasured = type === 'measured';
+  const vector = isMeasured && isVectorValue(data);
+  const scalarValue = !vector && data.value !== undefined && data.value !== null ? data.value : '';
+  const vectorValue = vector ? data.values.join(', ') : '';
+
   const form = document.createElement('div');
   form.className = 'source-edit-form';
   form.innerHTML = `
@@ -334,12 +392,27 @@ function showEditForm(item, key, data, type) {
       <input type="text" value="${escapeHtml(data.name)}" id="editName" placeholder="e.g., Temperature">
       <div class="field-help">Display name shown in lists and suggestions.</div>
     </div>
+    ${isMeasured ? `
     <div class="input-group">
+      <label>Value Type</label>
+      <div class="radio-group">
+        <label><input type="radio" name="valueType" value="scalar" ${vector ? '' : 'checked'}> Single value</label>
+        <label><input type="radio" name="valueType" value="vector" ${vector ? 'checked' : ''}> List of values</label>
+      </div>
+      <div class="field-help">Choose list when using indexed access like <code>$name[i]</code>.</div>
+    </div>
+    ` : ''}
+    <div class="input-group ${isMeasured ? (vector ? 'hidden scalar-group' : 'scalar-group') : ''}">
       <label for="editValue">Value</label>
-      <input type="number" value="${escapeHtml(data.value)}" step="any" id="editValue" placeholder="e.g., 25.5">
+      <input type="number" value="${escapeHtml(String(scalarValue))}" step="any" id="editValue" placeholder="e.g., 25.5">
       <div class="field-help">Numeric value (decimals supported). Uses dot for decimal separator.</div>
     </div>
-    ${type === 'measured' ? `
+    ${isMeasured ? `
+    <div class="input-group vector-group ${vector ? '' : 'hidden'}">
+      <label for="editValues">Values (comma separated)</label>
+      <textarea id="editValues" placeholder="e.g., 10, 20, 30">${escapeHtml(vectorValue)}</textarea>
+      <div class="field-help">Use commas or spaces between numbers. Indexing is zero-based.</div>
+    </div>
     <div class="input-group">
       <label for="editUnit">Unit (optional)</label>
       <input type="text" id="editUnit" value="${escapeHtml(data.unit || '')}" placeholder="e.g., C">
@@ -354,26 +427,67 @@ function showEditForm(item, key, data, type) {
 
   item.appendChild(form);
 
+  if (isMeasured) {
+    const radios = form.querySelectorAll('input[name="valueType"]');
+    const scalarGroup = form.querySelector('.scalar-group');
+    const vectorGroup = form.querySelector('.vector-group');
+    radios.forEach((radio) => {
+      radio.addEventListener('change', () => {
+        const selected = form.querySelector('input[name="valueType"]:checked')?.value || 'scalar';
+        toggleHidden(scalarGroup, selected !== 'scalar');
+        toggleHidden(vectorGroup, selected === 'scalar');
+      });
+    });
+  }
+
   form.querySelector('#saveEdit').addEventListener('click', () => {
     const nameInput = form.querySelector('#editName');
-    const valueInput = form.querySelector('#editValue');
+    const scalarInput = form.querySelector('#editValue');
+    const vectorInput = form.querySelector('#editValues');
     const unitInput = form.querySelector('#editUnit');
 
     const newName = nameInput.value.trim();
-    const newValue = parseFloat(valueInput.value);
-
-    if (!newName || Number.isNaN(newValue)) {
-      showToast('Please provide a valid name and numeric value.', 'error');
+    if (!newName) {
+      showToast('Please provide a name.', 'error');
       return;
     }
 
-    const updated = { name: newName, value: newValue };
+    const updated = { name: newName };
+
     if (type === 'measured') {
+      const selectedType = form.querySelector('input[name="valueType"]:checked')?.value || 'scalar';
+
+      if (selectedType === 'vector') {
+        try {
+          const values = parseVectorInput(vectorInput?.value ?? '', newName);
+          updated.values = values;
+        } catch (err) {
+          showToast(err.message, 'error');
+          return;
+        }
+      } else {
+        const numericValue = Number.parseFloat(scalarInput?.value ?? '');
+        if (Number.isNaN(numericValue)) {
+          showToast('Please provide a numeric value.', 'error');
+          return;
+        }
+        updated.value = numericValue;
+      }
+
       const unitValue = unitInput ? unitInput.value.trim() : '';
-      if (unitValue) updated.unit = unitValue;
+      if (unitValue) {
+        updated.unit = unitValue;
+      }
+
       state.measuredValues[key] = updated;
       renderMeasuredValues();
     } else {
+      const numericValue = Number.parseFloat(scalarInput?.value ?? '');
+      if (Number.isNaN(numericValue)) {
+        showToast('Please provide a numeric value.', 'error');
+        return;
+      }
+      updated.value = numericValue;
       state.constants[key] = updated;
       renderConstants();
     }
@@ -487,22 +601,41 @@ export function setupAddSourceButtons() {
       const name = prompt('Enter display name:');
       if (!name) return;
 
-      const valueInput = prompt('Enter value:');
-      if (valueInput === null) return;
+      const wantsVector = confirm('Is this variable a list of values? Click OK for list, Cancel for single value.');
+      let payload;
 
-      const value = parseFloat(valueInput);
-      if (Number.isNaN(value)) {
-        showToast('Invalid numeric value.', 'error');
-        return;
+      if (wantsVector) {
+        const valuesInput = prompt('Enter values separated by commas or spaces:');
+        if (valuesInput === null) return;
+        try {
+          const values = parseVectorInput(valuesInput, name);
+          payload = { values };
+        } catch (err) {
+          showToast(err.message, 'error');
+          return;
+        }
+      } else {
+        const valueInput = prompt('Enter value:');
+        if (valueInput === null) return;
+
+        const value = parseFloat(valueInput);
+        if (Number.isNaN(value)) {
+          showToast('Invalid numeric value.', 'error');
+          return;
+        }
+
+        payload = { value };
       }
 
       const unit = prompt('Optional unit (leave blank for unitless):', '');
       const symbol = `$${key}`;
 
+      const trimmedUnit = unit ? unit.trim() : '';
+
       state.measuredValues[symbol] = {
         name,
-        value,
-        unit: unit ? unit.trim() : undefined
+        ...payload,
+        ...(trimmedUnit ? { unit: trimmedUnit } : {})
       };
 
       renderMeasuredValues();

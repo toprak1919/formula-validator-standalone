@@ -95,13 +95,29 @@ function simulateDataChange() {
   const keys = Object.keys(state.measuredValues);
   if (!keys.length) return;
   const randomKey = keys[Math.floor(Math.random() * keys.length)];
-  const oldValue = state.measuredValues[randomKey].value;
-  const newValue = oldValue + (Math.random() - 0.5) * 10;
+  const entry = state.measuredValues[randomKey];
 
-  state.measuredValues[randomKey].value = parseFloat(newValue.toFixed(2));
-  renderMeasuredValues();
+  if (Array.isArray(entry.values) && entry.values.length > 0) {
+    const index = Math.floor(Math.random() * entry.values.length);
+    const oldValue = entry.values[index];
+    const newValue = oldValue + (Math.random() - 0.5) * 10;
 
-  showToast(`${state.measuredValues[randomKey].name} changed from ${oldValue.toFixed(2)} to ${newValue.toFixed(2)}`, 'info');
+    entry.values[index] = parseFloat(newValue.toFixed(2));
+    renderMeasuredValues();
+
+    showToast(`${entry.name}[${index}] changed from ${oldValue.toFixed(2)} to ${newValue.toFixed(2)}`, 'info');
+  } else if (typeof entry.value === 'number' && !Number.isNaN(entry.value)) {
+    const oldValue = entry.value;
+    const newValue = oldValue + (Math.random() - 0.5) * 10;
+
+    entry.value = parseFloat(newValue.toFixed(2));
+    renderMeasuredValues();
+
+    showToast(`${entry.name} changed from ${oldValue.toFixed(2)} to ${newValue.toFixed(2)}`, 'info');
+  } else {
+    return;
+  }
+
   performBackendValidation();
 }
 
